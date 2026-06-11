@@ -94,6 +94,26 @@ export function EventBanner({
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(239,31,40,0.34),transparent_40%)]" />
       <div className="ludo-section-shell relative z-10">
+        {slides.length > 1 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => move("prev")}
+              className="absolute -left-3 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-black/65 text-white shadow-[0_16px_44px_rgba(0,0,0,0.38)] backdrop-blur transition hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] md:flex lg:-left-14"
+              aria-label="Previous event"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => move("next")}
+              className="absolute -right-3 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-black/65 text-white shadow-[0_16px_44px_rgba(0,0,0,0.38)] backdrop-blur transition hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] md:flex lg:-right-14"
+              aria-label="Next event"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </>
+        ) : null}
         <article className="relative isolate overflow-hidden rounded-[22px] border border-[#EF1F28]/30 bg-[#0B0B0B] shadow-[0_32px_110px_rgba(239,31,40,0.22)] sm:rounded-[30px]">
           <div
             className="pointer-events-none absolute inset-0 flex transition-transform duration-700 ease-out"
@@ -118,23 +138,6 @@ export function EventBanner({
           </div>
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.62)_46%,rgba(90,5,5,0.76)_100%)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_22%,rgba(247,198,0,0.18),transparent_22%),radial-gradient(circle_at_56%_76%,rgba(239,31,40,0.42),transparent_34%)]" />
-
-          <button
-            type="button"
-            onClick={() => move("prev")}
-            className="absolute left-4 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur transition hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] md:flex"
-            aria-label="Previous event"
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => move("next")}
-            className="absolute right-4 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur transition hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] md:flex"
-            aria-label="Next event"
-          >
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
 
           <div className="relative z-10 grid min-h-[560px] gap-7 px-4 py-9 sm:gap-9 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-12 lg:py-14">
             <div>

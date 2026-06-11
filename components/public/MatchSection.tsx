@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-import { isInteractiveTarget } from "@/components/public/interaction";
 import type { PublicMatch } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
 import { cn } from "@/lib/utils";
@@ -27,80 +26,110 @@ export function MatchSection({
   whatsappNumber,
   defaultMessage,
 }: MatchSectionProps) {
-  const [perPage, setPerPage] = useState(1);
-  const [page, setPage] = useState(0);
-  const touchStartX = useRef<number | null>(null);
-  const touchStartedOnInteractive = useRef(false);
-  const totalPages = Math.max(1, Math.ceil(matches.length / perPage));
-  const safePage = Math.min(page, totalPages - 1);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [cardsPerPage, setCardsPerPage] = useState(getCardsPerPage);
+  const pageCount = Math.max(1, Math.ceil(matches.length / cardsPerPage));
+  const activePage = Math.min(
+    pageCount - 1,
+    Math.floor(activeIndex / cardsPerPage),
+  );
 
   useEffect(() => {
-    function updatePerPage() {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setPerPage(1);
-      } else if (width < 1024) {
-        setPerPage(2);
-      } else {
-        setPerPage(4);
-      }
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const scrollerElement = scroller;
+
+    let animationFrame = 0;
+    function updateActiveIndex() {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(() => {
+        const cards = Array.from(scrollerElement.children) as HTMLElement[];
+        if (cards.length === 0) return;
+
+        const center =
+          scrollerElement.scrollLeft + scrollerElement.clientWidth / 2;
+        const nearestIndex = cards.reduce((nearest, card, index) => {
+          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+          const nearestCard = cards[nearest];
+          const nearestCenter =
+            nearestCard.offsetLeft + nearestCard.offsetWidth / 2;
+
+          return Math.abs(cardCenter - center) <
+            Math.abs(nearestCenter - center)
+            ? index
+            : nearest;
+        }, 0);
+
+        setActiveIndex(nearestIndex);
+      });
     }
 
-    updatePerPage();
-    window.addEventListener("resize", updatePerPage);
-    return () => window.removeEventListener("resize", updatePerPage);
-  }, []);
+    scrollerElement.addEventListener("scroll", updateActiveIndex, {
+      passive: true,
+    });
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      scrollerElement.removeEventListener("scroll", updateActiveIndex);
+    };
+  }, [matches.length]);
 
   useEffect(() => {
-    if (totalPages <= 1) return;
+    if (matches.length <= 1) return;
 
     const interval = window.setInterval(() => {
-      setPage((current) => {
-        const normalized = Math.min(current, totalPages - 1);
-        return normalized === totalPages - 1 ? 0 : normalized + 1;
+      setActiveIndex((current) => {
+        const currentPage = Math.floor(current / cardsPerPage);
+        const nextPage = currentPage === pageCount - 1 ? 0 : currentPage + 1;
+        const next = nextPage * cardsPerPage;
+        scrollToCard(next);
+        return next;
       });
     }, 4600);
 
     return () => window.clearInterval(interval);
-  }, [totalPages]);
+  }, [cardsPerPage, matches.length, pageCount]);
+
+  useEffect(() => {
+    function handleResize() {
+      setCardsPerPage(getCardsPerPage());
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   function move(direction: "prev" | "next") {
-    setPage((current) => {
-      const normalized = Math.min(current, totalPages - 1);
+    if (matches.length <= 0) return;
+
+    setActiveIndex((current) => {
+      const currentPage = Math.floor(
+        Math.min(current, matches.length - 1) / cardsPerPage,
+      );
 
       if (direction === "next") {
-        return normalized === totalPages - 1 ? 0 : normalized + 1;
+        const nextPage = currentPage === pageCount - 1 ? 0 : currentPage + 1;
+        const next = nextPage * cardsPerPage;
+        scrollToCard(next);
+        return next;
       }
 
-      return normalized === 0 ? totalPages - 1 : normalized - 1;
+      const previousPage = currentPage === 0 ? pageCount - 1 : currentPage - 1;
+      const previous = previousPage * cardsPerPage;
+      scrollToCard(previous);
+      return previous;
     });
   }
 
-  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
-    touchStartedOnInteractive.current = isInteractiveTarget(event.target);
-    if (touchStartedOnInteractive.current) {
-      touchStartX.current = null;
-      return;
-    }
+  function scrollToCard(index: number) {
+    const scroller = scrollerRef.current;
+    const card = scroller?.children[index] as HTMLElement | undefined;
+    if (!scroller || !card) return;
 
-    touchStartX.current = event.touches[0]?.clientX ?? null;
-  }
-
-  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
-    if (touchStartedOnInteractive.current) {
-      touchStartedOnInteractive.current = false;
-      touchStartX.current = null;
-      return;
-    }
-
-    if (touchStartX.current === null) return;
-
-    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
-    const deltaX = touchStartX.current - endX;
-    touchStartX.current = null;
-
-    if (Math.abs(deltaX) < 42) return;
-    move(deltaX > 0 ? "next" : "prev");
+    scroller.scrollTo({
+      left: card.offsetLeft - scroller.offsetLeft,
+      behavior: "smooth",
+    });
   }
 
   return (
@@ -110,56 +139,53 @@ export function MatchSection({
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(239,31,40,0.28),transparent_42%)]" />
       <div className="ludo-section-shell relative z-10">
-        <div className="mb-7 flex items-center justify-between gap-4">
+        <div className="mb-7 max-w-[1180px]">
           <h2 className="font-display ludo-text-shadow max-w-[75%] text-[clamp(3rem,13vw,6.7rem)] uppercase leading-[0.84] text-[#F8EDE7] sm:max-w-none sm:text-[clamp(3.6rem,8vw,6.7rem)]">
             This Week Match
           </h2>
-          <div className="hidden gap-3 sm:flex">
-            <CarouselButton
-              label="Previous matches"
-              onClick={() => move("prev")}
-            >
-              <ChevronLeft className="h-6 w-6" aria-hidden="true" />
-            </CarouselButton>
-            <CarouselButton label="Next matches" onClick={() => move("next")}>
-              <ChevronRight className="h-6 w-6" aria-hidden="true" />
-            </CarouselButton>
-          </div>
         </div>
 
         {matches.length > 0 ? (
-          <div
-            className="relative z-10 overflow-hidden [touch-action:pan-y]"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div
-              className="flex transition-transform duration-700 ease-out"
-              style={{ transform: `translateX(-${safePage * 100}%)` }}
+          <div className="relative left-1/2 z-10 w-[min(100vw-0.75rem,1440px)] -translate-x-1/2 px-6 sm:w-[min(100vw-2rem,1440px)] sm:px-10 lg:px-16 xl:w-[min(100vw-3rem,1500px)]">
+            <button
+              type="button"
+              onClick={() => move("prev")}
+              className="absolute left-0 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/25 bg-black/70 text-white shadow-[0_16px_40px_rgba(0,0,0,0.36)] backdrop-blur transition active:scale-95 hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] sm:h-12 sm:w-12"
+              aria-label="Previous matches"
             >
-              {Array.from({ length: totalPages }).map((_, pageIndex) => (
+              <ChevronLeft
+                className="h-5 w-5 sm:h-6 sm:w-6"
+                aria-hidden="true"
+              />
+            </button>
+            <div
+              ref={scrollerRef}
+              className="no-scrollbar flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-0 py-1 [touch-action:pan-x] lg:gap-6"
+            >
+              {matches.map((match) => (
                 <div
-                  key={pageIndex}
-                  className={cn(
-                    "grid min-w-full gap-5",
-                    perPage === 1 && "grid-cols-1",
-                    perPage === 2 && "grid-cols-2",
-                    perPage === 4 && "grid-cols-4",
-                  )}
+                  key={match.id}
+                  className="min-w-full snap-start sm:min-w-[calc(50%-0.625rem)] lg:min-w-[calc(25%-1.125rem)]"
                 >
-                  {matches
-                    .slice(pageIndex * perPage, pageIndex * perPage + perPage)
-                    .map((match) => (
-                      <MatchCard
-                        key={match.id}
-                        match={match}
-                        whatsappNumber={whatsappNumber}
-                        defaultMessage={defaultMessage}
-                      />
-                    ))}
+                  <MatchCard
+                    match={match}
+                    whatsappNumber={whatsappNumber}
+                    defaultMessage={defaultMessage}
+                  />
                 </div>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => move("next")}
+              className="absolute right-0 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/25 bg-black/70 text-white shadow-[0_16px_40px_rgba(0,0,0,0.36)] backdrop-blur transition active:scale-95 hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] sm:h-12 sm:w-12"
+              aria-label="Next matches"
+            >
+              <ChevronRight
+                className="h-5 w-5 sm:h-6 sm:w-6"
+                aria-hidden="true"
+              />
+            </button>
           </div>
         ) : (
           <div className="rounded-[24px] border border-white/10 bg-[#0B0B0B] p-8 text-center">
@@ -172,38 +198,28 @@ export function MatchSection({
           </div>
         )}
 
-        <div className="relative z-30 mt-7 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => move("prev")}
-            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/25 bg-black/55 text-white transition active:scale-95 hover:border-[#F7C600] hover:text-[#F7C600] sm:hidden"
-            aria-label="Previous matches"
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          {Array.from({ length: totalPages }).map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setPage(index)}
-              className={cn(
-                "h-2.5 touch-manipulation rounded-full transition",
-                index === safePage
-                  ? "w-9 bg-[#F7C600]"
-                  : "w-2.5 bg-white/35 hover:bg-white/65",
-              )}
-              aria-label={`Show match page ${index + 1}`}
-            />
-          ))}
-          <button
-            type="button"
-            onClick={() => move("next")}
-            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/25 bg-black/55 text-white transition active:scale-95 hover:border-[#F7C600] hover:text-[#F7C600] sm:hidden"
-            aria-label="Next matches"
-          >
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
+        {pageCount > 1 ? (
+          <div className="relative z-30 mt-7 flex items-center justify-center gap-2">
+            {Array.from({ length: pageCount }).map((_, pageIndex) => (
+              <button
+                key={pageIndex}
+                type="button"
+                onClick={() => {
+                  const index = pageIndex * cardsPerPage;
+                  setActiveIndex(index);
+                  scrollToCard(index);
+                }}
+                className={cn(
+                  "h-2.5 touch-manipulation rounded-full transition",
+                  pageIndex === activePage
+                    ? "w-9 bg-[#F7C600]"
+                    : "w-2.5 bg-white/35 hover:bg-white/65",
+                )}
+                aria-label={`Show match page ${pageIndex + 1}`}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -267,11 +283,11 @@ function MatchCard({
           <WhatsAppButton
             phoneNumber={whatsappNumber}
             message={match.whatsappMessage ?? defaultMessage}
-            variant={match.status === "LIMITED" ? "outline" : "solid"}
+            variant="solid"
             className={cn(
               "w-full",
               match.status === "LIMITED" &&
-                "border-[#F7C600] text-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505] focus-visible:outline-[#F7C600]",
+                "!bg-[#F7C600] !text-[#050505] shadow-[0_14px_34px_rgba(247,198,0,0.24)] hover:!bg-[#ffdc32] focus-visible:outline-[#F7C600]",
             )}
           >
             {match.buttonLabel}
@@ -279,27 +295,6 @@ function MatchCard({
         )}
       </div>
     </article>
-  );
-}
-
-function CarouselButton({
-  children,
-  label,
-  onClick,
-}: {
-  children: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="relative z-30 flex h-12 w-12 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-black/35 text-white transition hover:border-[#F7C600] hover:bg-[#F7C600] hover:text-[#050505]"
-      aria-label={label}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -336,6 +331,22 @@ function SoldOutStamp() {
       </span>
     </div>
   );
+}
+
+function getCardsPerPage() {
+  if (typeof window === "undefined") {
+    return 4;
+  }
+
+  if (window.innerWidth < 640) {
+    return 1;
+  }
+
+  if (window.innerWidth < 1024) {
+    return 2;
+  }
+
+  return 4;
 }
 
 function initials(name: string) {
