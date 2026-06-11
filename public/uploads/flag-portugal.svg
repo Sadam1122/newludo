@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-labelledby="title">
+  <title>Portugal flag</title>
+  <path fill="#046A38" d="M0 0h320v480H0z" />
+  <path fill="#DA291C" d="M320 0h480v480H320z" />
+  <circle cx="320" cy="240" r="58" fill="#FFCD00" />
+  <circle cx="320" cy="240" r="34" fill="#fff" />
+</svg>

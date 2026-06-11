@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="title">
+  <title>Coca-Cola</title>
+  <rect width="900" height="260" fill="none" />
+  <text
+    x="450"
+    y="145"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="118"
+    font-style="italic"
+    font-weight="700"
+    fill="#EF1F28"
+  >
+    Coca-Cola
+  </text>
+  <path
+    d="M165 177 C255 218 395 214 474 177 C560 137 677 136 748 177"
+    fill="none"
+    stroke="#EF1F28"
+    stroke-width="10"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-labelledby="title">
+  <title>England flag</title>
+  <rect width="800" height="480" fill="#fff" />
+  <path d="M0 192h800v96H0zM352 0h96v480h-96z" fill="#C8102E" />
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-labelledby="title">
+  <title>Spain flag</title>
+  <path fill="#AA151B" d="M0 0h800v480H0z" />
+  <path fill="#F1BF00" d="M0 120h800v240H0z" />
+  <circle cx="190" cy="240" r="44" fill="#AA151B" opacity=".9" />
+</svg>
