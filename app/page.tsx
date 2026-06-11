@@ -15,6 +15,7 @@ import type {
   MatchCard,
   SiteSetting,
 } from "@prisma/client";
+import type { Metadata } from "next";
 import type {
   PublicBrand,
   PublicEvent,
@@ -26,11 +27,62 @@ import type {
 } from "@/components/public/types";
 import { prisma } from "@/lib/prisma";
 import {
+  DEFAULT_OG_IMAGE,
+  absoluteUrl,
+  buildHomepageJsonLd,
+  buildSeoDescription,
+  seoKeywords,
+} from "@/lib/seo";
+import {
   DEFAULT_WHATSAPP_MESSAGE,
   DEFAULT_WHATSAPP_NUMBER,
 } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [settings, heroes, , , location] = await getHomepageContent();
+  const siteName = settings?.siteName ?? DEFAULT_SETTINGS.siteName;
+  const siteTagline = settings?.siteTagline ?? DEFAULT_SETTINGS.siteTagline;
+  const description = buildSeoDescription({
+    siteName,
+    siteTagline,
+    address: location?.address ?? DEFAULT_LOCATION.address,
+  });
+  const heroImage =
+    heroes.find((hero) => hero.backgroundImage)?.backgroundImage ??
+    DEFAULT_HEROES.find((hero) => hero.backgroundImage)?.backgroundImage ??
+    DEFAULT_OG_IMAGE;
+
+  return {
+    title: `${siteName} | Sports Kitchen & Coffee Bandung`,
+    description,
+    keywords: seoKeywords,
+    alternates: {
+      canonical: absoluteUrl("/"),
+    },
+    openGraph: {
+      type: "website",
+      locale: "id_ID",
+      url: absoluteUrl("/"),
+      siteName,
+      title: `${siteName} | Sports Kitchen & Coffee Bandung`,
+      description,
+      images: [
+        {
+          url: absoluteUrl(heroImage),
+          alt: siteName,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${siteName} | Sports Kitchen & Coffee Bandung`,
+      description,
+      images: [absoluteUrl(heroImage)],
+    },
+  };
+}
 
 const DEFAULT_SETTINGS: PublicSettings = {
   siteName: "LUDO Sports Kitchen & Coffee",
@@ -225,7 +277,7 @@ const DEFAULT_BRAND: PublicBrand = {
   titleHighlight: "LEADING BRANDS",
   subtitle: "Official Brand Partner",
   brandName: "Coca-Cola",
-  brandLogo: "/uploads/coca-cola-logo.svg",
+  brandLogo: "/Coca-Cola_logo.svg.png",
   bottomText: "EXCLUSIVE COLLABORATION",
 };
 
@@ -373,13 +425,43 @@ export default async function HomePage() {
         titleHighlight: brand.titleHighlight,
         subtitle: brand.subtitle,
         brandName: brand.brandName,
-        brandLogo: brand.brandLogo ?? DEFAULT_BRAND.brandLogo,
+        brandLogo:
+          brand.brandLogo && brand.brandLogo !== "/uploads/coca-cola-logo.svg"
+            ? brand.brandLogo
+            : DEFAULT_BRAND.brandLogo,
         bottomText: brand.bottomText,
       }
     : DEFAULT_BRAND;
+  const homepageJsonLd = buildHomepageJsonLd({
+    settings: {
+      siteName: publicSettings.siteName,
+      siteTagline: publicSettings.siteTagline,
+      whatsappNumber: publicSettings.whatsappNumber,
+      defaultWhatsappMessage: publicSettings.defaultWhatsappMessage,
+      instagramUrl: publicSettings.instagramUrl,
+      instagramHandle: publicSettings.instagramHandle,
+      tiktokUrl: publicSettings.tiktokUrl,
+      tiktokHandle: publicSettings.tiktokHandle,
+    },
+    location: {
+      businessName: publicLocation.businessName,
+      address: publicLocation.address,
+      mapUrl: publicLocation.mapUrl,
+      instagramUrl: publicLocation.instagramUrl,
+      tiktokUrl: publicLocation.tiktokUrl,
+    },
+    faqs: publicFaqs,
+    image: publicHeroes.find((hero) => hero.backgroundImage)?.backgroundImage,
+  });
 
   return (
     <main className="min-h-screen bg-[#050505] text-[#F8EDE7]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homepageJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <Header
         siteName={publicSettings.siteName}
         tagline={publicSettings.siteTagline}

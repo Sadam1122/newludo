@@ -11,7 +11,8 @@ const heroSportsNightImage = "/uploads/hero-sports-night.png";
 const heroFoodMatchImage = "/uploads/hero-food-match.png";
 const eventLiveNightImage = "/uploads/event-live-night.png";
 const eventDjNightImage = "/uploads/event-dj-night.png";
-const brandLogo = "/uploads/coca-cola-logo.svg";
+const oldBrandLogo = "/uploads/coca-cola-logo.svg";
+const brandLogo = "/Coca-Cola_logo.svg.png";
 const flags = {
   argentina: "/uploads/flag-argentina.svg",
   brazil: "/uploads/flag-brazil.svg",
@@ -289,6 +290,7 @@ async function main() {
           eventLiveNightImage,
           eventDjNightImage,
           brandLogo,
+          oldBrandLogo,
           ...Object.values(flags),
         ],
       },
@@ -333,10 +335,10 @@ async function main() {
         size: 1810495,
       },
       {
-        filename: "coca-cola-logo.svg",
+        filename: "Coca-Cola_logo.svg.png",
         url: brandLogo,
-        mimeType: "image/svg+xml",
-        size: 617,
+        mimeType: "image/png",
+        size: 48072,
       },
       {
         filename: "flag-argentina.svg",
