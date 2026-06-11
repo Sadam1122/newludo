@@ -1,6 +1,6 @@
 import type { EventBanner } from "@prisma/client";
-import { Save } from "lucide-react";
 
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { createEvent, updateEvent } from "@/server/actions/eventActions";
 
 type EventFormProps = {
@@ -111,13 +111,17 @@ export function EventForm({ event }: EventFormProps) {
         defaultChecked={event?.isActive ?? true}
       />
 
-      <button
-        type="submit"
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-ludo-red px-4 text-sm font-black uppercase text-white transition hover:bg-red-500 sm:w-auto"
+      <ConfirmSubmitButton
+        title={isEditing ? "Save event changes?" : "Create this event?"}
+        description={
+          isEditing
+            ? "This will update the selected event and refresh the public event carousel if it is active."
+            : "This will add a new event to the CMS. If Active is enabled, it can appear on the public homepage."
+        }
+        confirmLabel={isEditing ? "Save Event" : "Create Event"}
       >
-        <Save className="h-4 w-4" aria-hidden="true" />
         {isEditing ? "Save Event" : "Create Event"}
-      </button>
+      </ConfirmSubmitButton>
     </form>
   );
 }
