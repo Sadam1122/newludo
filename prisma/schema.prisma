@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SiteSetting {
+  id                     String   @id @default(cuid())
+  siteName               String   @default("LUDO Sports Kitchen & Coffee")
+  siteTagline            String   @default("EAT · WATCH · CONNECT")
+  whatsappNumber         String   @default("6282318560003")
+  defaultWhatsappMessage String   @default("Halo LUDO, saya ingin reservasi meja.")
+  instagramHandle        String   @default("@ludosportskitchen")
+  instagramUrl           String   @default("https://www.instagram.com/ludosportskitchen/")
+  tiktokHandle           String   @default("@ludosportskitchen")
+  tiktokUrl              String   @default("https://www.tiktok.com/@ludosportskitchen")
+  menuUrl                String   @default("https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r")
+  footerCopyright        String   @default("© 2026 LUDO SPORTS KITCHEN & COFFEE. ALL RIGHTS RESERVED.")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model MatchCard {
+  id               String      @id @default(cuid())
+  leagueName       String
+  homeTeamName     String
+  awayTeamName     String
+  homeTeamLogo     String?
+  awayTeamLogo     String?
+  matchDateLabel   String
+  matchTimeLabel   String
+  status           MatchStatus
+  buttonLabel      String
+  whatsappMessage  String?
+  showSoldOutStamp Boolean     @default(false)
+  isActive         Boolean     @default(true)
+  sortOrder        Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+enum MatchStatus {
+  BOOK
+  LIMITED
+  FULL_BOOKED
+  CURRENTLY_SHOWING
+}
+
+model HeroSection {
+  id                 String   @id @default(cuid())
+  headlineLine1      String   @default("BIG")
+  headlineHighlight1 String   @default("MATCH,")
+  headlineLine2      String   @default("BIG")
+  headlineHighlight2 String   @default("FLAVOR.")
+  subtitle           String   @default("Nonton seru, makan enak, suasana maksimal.")
+  ctaLabel           String   @default("BOOK YOUR TABLE NOW")
+  ctaWhatsappMessage String   @default("Halo LUDO, saya ingin reservasi meja.")
+  backgroundImage    String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model EventBanner {
+  id                 String   @id @default(cuid())
+  title              String
+  artistName         String
+  eventDateLabel     String
+  eventTimeLabel     String
+  eventTypeLabel     String?
+  headlineLine1      String
+  headlineHighlight1 String
+  headlineLine2      String
+  headlineHighlight2 String
+  backgroundImage    String?
+  ctaLabel           String
+  whatsappMessage    String?
+  isActive           Boolean  @default(true)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model LocationSetting {
+  id              String   @id @default(cuid())
+  businessName    String   @default("LUDO Sports Kitchen & Coffee")
+  address         String   @default("Jl. Kiara Artha No.C23 Blok F6B 4, Kec. Batununggal, Kota Bandung, Jawa Barat")
+  mapImage        String?
+  mapUrl          String   @default("https://www.google.com/maps/search/?api=1&query=LUDO%20Sports%20Kitchen%20%26%20Coffee%20Kiara%20Artha%20Bandung")
+  instagramHandle String   @default("@ludosportskitchen")
+  instagramUrl    String   @default("https://www.instagram.com/ludosportskitchen/")
+  tiktokHandle    String   @default("@ludosportskitchen")
+  tiktokUrl       String   @default("https://www.tiktok.com/@ludosportskitchen")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FAQItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BrandSection {
+  id                   String   @id @default(cuid())
+  titleBeforeHighlight String   @default("TRUSTED BY")
+  titleHighlight       String   @default("LEADING BRANDS")
+  subtitle             String   @default("Official Brand Partner")
+  brandName            String   @default("Coca-Cola")
+  brandLogo            String?
+  bottomText           String   @default("EXCLUSIVE COLLABORATION")
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model MediaFile {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
