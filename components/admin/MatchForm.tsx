@@ -1,6 +1,7 @@
 import type { MatchCard } from "@prisma/client";
-import { Save } from "lucide-react";
 
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { createMatch, updateMatch } from "@/server/actions/matchActions";
 
 const statuses = [
@@ -8,6 +9,11 @@ const statuses = [
   "LIMITED",
   "FULL_BOOKED",
   "CURRENTLY_SHOWING",
+] as const;
+
+const displayModes = [
+  { value: "TEAM_MATCH", label: "Team Match" },
+  { value: "GENERAL_EVENT", label: "General Event / Broadcast" },
 ] as const;
 
 type MatchFormProps = {
@@ -22,20 +28,50 @@ export function MatchForm({ match }: MatchFormProps) {
       {match ? <input type="hidden" name="id" value={match.id} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
+        <label className="block">
+          <FormFieldLabel>Display Mode</FormFieldLabel>
+          <select
+            name="displayMode"
+            defaultValue={match?.displayMode ?? "TEAM_MATCH"}
+            className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
+          >
+            {displayModes.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <Field
           label="League Name"
           name="leagueName"
           defaultValue={match?.leagueName}
         />
         <Field
+          label="General Event Title"
+          name="title"
+          defaultValue={match?.title ?? ""}
+          placeholder="F1 British GP, UFC Fight Night, MotoGP Mandalika"
+          required={false}
+        />
+        <Field
+          label="Category / Type"
+          name="categoryLabel"
+          defaultValue={match?.categoryLabel ?? ""}
+          placeholder="F1, MotoGP, UFC, Boxing, Concert"
+          required={false}
+        />
+        <Field
           label="Home Team"
           name="homeTeamName"
           defaultValue={match?.homeTeamName}
+          required={false}
         />
         <Field
           label="Away Team"
           name="awayTeamName"
           defaultValue={match?.awayTeamName}
+          required={false}
         />
         <Field
           label="Date Label"
@@ -47,10 +83,15 @@ export function MatchForm({ match }: MatchFormProps) {
           name="matchTimeLabel"
           defaultValue={match?.matchTimeLabel}
         />
+        <Field
+          label="Scheduled Date & Time"
+          name="scheduledAt"
+          type="datetime-local"
+          defaultValue={toDateTimeLocal(match?.scheduledAt)}
+          required={false}
+        />
         <label className="block">
-          <span className="mb-2 block text-sm font-semibold text-white/75">
-            Status
-          </span>
+          <FormFieldLabel>Status</FormFieldLabel>
           <select
             name="status"
             defaultValue={match?.status ?? "BOOK"}
@@ -78,6 +119,7 @@ export function MatchForm({ match }: MatchFormProps) {
           label="Home Logo URL"
           name="homeTeamLogo"
           defaultValue={match?.homeTeamLogo ?? ""}
+          required={false}
         />
         <FileField
           label="Upload Home Logo"
@@ -88,18 +130,40 @@ export function MatchForm({ match }: MatchFormProps) {
           label="Away Logo URL"
           name="awayTeamLogo"
           defaultValue={match?.awayTeamLogo ?? ""}
+          required={false}
         />
         <FileField
           label="Upload Away Logo"
           name="awayTeamLogoFile"
           value={match?.awayTeamLogo}
         />
+        <Field
+          label="General Event Image URL"
+          name="eventImage"
+          defaultValue={match?.eventImage ?? ""}
+          required={false}
+        />
+        <FileField
+          label="Upload General Event Image"
+          name="eventImageFile"
+          value={match?.eventImage}
+        />
       </div>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          WhatsApp Message
-        </span>
+        <FormFieldLabel required={false}>
+          General Event Description
+        </FormFieldLabel>
+        <textarea
+          name="description"
+          rows={3}
+          defaultValue={match?.description ?? ""}
+          className="w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-white outline-none focus:border-ludo-gold"
+        />
+      </label>
+
+      <label className="block">
+        <FormFieldLabel required={false}>WhatsApp Message</FormFieldLabel>
         <textarea
           name="whatsappMessage"
           rows={3}
@@ -121,13 +185,17 @@ export function MatchForm({ match }: MatchFormProps) {
         />
       </div>
 
-      <button
-        type="submit"
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-ludo-red px-4 text-sm font-black uppercase text-white transition hover:bg-red-500 sm:w-auto"
+      <ConfirmSubmitButton
+        title={isEditing ? "Save schedule item?" : "Create schedule item?"}
+        description={
+          isEditing
+            ? "This will update the match or broadcast item and refresh the public schedule if it is active."
+            : "This will create a new schedule item. Team Match requires home and away teams; General Event can be saved without teams."
+        }
+        confirmLabel={isEditing ? "Save Item" : "Create Item"}
       >
-        <Save className="h-4 w-4" aria-hidden="true" />
         {isEditing ? "Save Match" : "Create Match"}
-      </button>
+      </ConfirmSubmitButton>
     </form>
   );
 }
@@ -137,25 +205,40 @@ function Field({
   name,
   defaultValue = "",
   type = "text",
+  placeholder,
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   type?: string;
+  placeholder?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={required}>{label}</FormFieldLabel>
       <input
         name={name}
         type={type}
         defaultValue={defaultValue ?? ""}
+        placeholder={placeholder}
         className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
       />
     </label>
   );
+}
+
+function toDateTimeLocal(value?: Date | string | null) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const offsetDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60000,
+  );
+  return offsetDate.toISOString().slice(0, 16);
 }
 
 function FileField({
@@ -169,13 +252,11 @@ function FileField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={false}>{label}</FormFieldLabel>
       <input
         name={name}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,image/svg+xml"
         className="min-h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-sm text-white file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-ludo-black"
       />
       {value ? (

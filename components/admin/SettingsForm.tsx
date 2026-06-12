@@ -1,6 +1,7 @@
 import type { SiteSetting } from "@prisma/client";
-import { Save } from "lucide-react";
 
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { updateSiteSettings } from "@/server/actions/settingActions";
 
 type SettingsFormProps = {
@@ -27,6 +28,34 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           label="WhatsApp Number"
           name="whatsappNumber"
           defaultValue={settings?.whatsappNumber ?? "6282318560003"}
+        />
+        <Field
+          label="Match Section Title"
+          name="matchSectionTitle"
+          defaultValue={settings?.matchSectionTitle ?? "THIS WEEK MATCH"}
+        />
+        <Field
+          label="Header Booking Button Text"
+          name="headerBookingLabel"
+          defaultValue={settings?.headerBookingLabel ?? "WhatsApp"}
+        />
+        <Field
+          label="Header Booking URL"
+          name="headerBookingUrl"
+          defaultValue={settings?.headerBookingUrl ?? ""}
+          placeholder="Leave empty to use WhatsApp booking"
+          required={false}
+        />
+        <Field
+          label="Event / MICE Button Text"
+          name="eventMiceLabel"
+          defaultValue={settings?.eventMiceLabel ?? "Event / MICE"}
+        />
+        <Field
+          label="Event / MICE URL"
+          name="eventMiceUrl"
+          defaultValue={settings?.eventMiceUrl ?? "/event-mice"}
+          required={false}
         />
         <Field
           label="Instagram Handle"
@@ -63,10 +92,21 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         />
       </div>
 
+      <div className="flex flex-wrap gap-4">
+        <Checkbox
+          label="Show header booking button"
+          name="headerBookingVisible"
+          defaultChecked={settings?.headerBookingVisible ?? true}
+        />
+        <Checkbox
+          label="Show Event / MICE button"
+          name="eventMiceVisible"
+          defaultChecked={settings?.eventMiceVisible ?? true}
+        />
+      </div>
+
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          Default WhatsApp Message
-        </span>
+        <FormFieldLabel>Default WhatsApp Message</FormFieldLabel>
         <textarea
           name="defaultWhatsappMessage"
           rows={3}
@@ -79,9 +119,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          Footer Copyright
-        </span>
+        <FormFieldLabel>Footer Copyright</FormFieldLabel>
         <textarea
           name="footerCopyright"
           rows={2}
@@ -93,13 +131,13 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         />
       </label>
 
-      <button
-        type="submit"
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-ludo-red px-4 text-sm font-black uppercase text-white transition hover:bg-red-500 sm:w-auto"
+      <ConfirmSubmitButton
+        title="Save site settings?"
+        description="This will update public homepage labels, header buttons, social links, and SEO-related site settings."
+        confirmLabel="Save Settings"
       >
-        <Save className="h-4 w-4" aria-hidden="true" />
         Save Settings
-      </button>
+      </ConfirmSubmitButton>
     </form>
   );
 }
@@ -108,21 +146,46 @@ function Field({
   label,
   name,
   defaultValue = "",
+  placeholder,
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
+  placeholder?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={required}>{label}</FormFieldLabel>
       <input
         name={name}
         defaultValue={defaultValue ?? ""}
+        placeholder={placeholder}
         className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
       />
+    </label>
+  );
+}
+
+function Checkbox({
+  label,
+  name,
+  defaultChecked,
+}: {
+  label: string;
+  name: string;
+  defaultChecked: boolean;
+}) {
+  return (
+    <label className="inline-flex items-center gap-2 text-sm font-semibold text-white/75">
+      <input
+        name={name}
+        type="checkbox"
+        defaultChecked={defaultChecked}
+        className="h-4 w-4 rounded border-white/20 bg-ludo-black accent-ludo-red"
+      />
+      {label}
     </label>
   );
 }

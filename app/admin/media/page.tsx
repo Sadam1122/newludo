@@ -1,4 +1,4 @@
-import { ImageIcon } from "lucide-react";
+import { FileIcon } from "lucide-react";
 
 import { AdminNotice } from "@/components/admin/AdminNotice";
 import { CopyButton } from "@/components/admin/CopyButton";
@@ -29,7 +29,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         <h1 className="mt-2 text-3xl font-black text-white">Media Library</h1>
         <p className="mt-2 text-sm font-semibold text-white/50">
           Uploads here can be reused in Hero, Events, Location, Brand, and Match
-          forms.
+          forms. Videos can be used in Gallery CMS.
         </p>
       </div>
 
@@ -42,7 +42,16 @@ export default async function MediaPage({ searchParams }: PageProps) {
             className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] shadow-[0_20px_70px_rgba(0,0,0,0.22)] transition hover:border-ludo-gold/45"
           >
             <div className="flex aspect-video items-center justify-center bg-ludo-black">
-              {media.mimeType === "image/svg+xml" || media.url ? (
+              {media.mimeType.startsWith("video/") ? (
+                <video
+                  src={media.url}
+                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-contain"
+                />
+              ) : media.mimeType.startsWith("image/") ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={media.url}
@@ -50,7 +59,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
                   className="h-full w-full object-contain p-3"
                 />
               ) : (
-                <ImageIcon
+                <FileIcon
                   className="h-10 w-10 text-white/30"
                   aria-hidden="true"
                 />

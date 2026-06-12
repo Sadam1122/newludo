@@ -1,6 +1,7 @@
 import type { EventBanner } from "@prisma/client";
 
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { createEvent, updateEvent } from "@/server/actions/eventActions";
 
 type EventFormProps = {
@@ -14,12 +15,12 @@ export function EventForm({ event }: EventFormProps) {
     <form action={isEditing ? updateEvent : createEvent} className="space-y-4">
       {event ? <input type="hidden" name="id" value={event.id} /> : null}
       {event?.backgroundImage ? (
-        <div className="overflow-hidden rounded border border-white/10 bg-ludo-black">
+        <div className="mx-auto max-w-sm overflow-hidden rounded border border-white/10 bg-ludo-black">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={event.backgroundImage}
             alt="Event image preview"
-            className="h-56 w-full object-cover"
+            className="aspect-[4/5] w-full object-cover"
           />
         </div>
       ) : null}
@@ -31,9 +32,14 @@ export function EventForm({ event }: EventFormProps) {
           defaultValue={event?.title ?? "Live Performance"}
         />
         <Field
-          label="Artist Name"
+          label="Talent / Artist Name"
           name="artistName"
           defaultValue={event?.artistName ?? ""}
+        />
+        <Field
+          label="Talent Label"
+          name="talentLabel"
+          defaultValue={event?.talentLabel ?? "Talent"}
         />
         <Field
           label="Date Label"
@@ -46,9 +52,17 @@ export function EventForm({ event }: EventFormProps) {
           defaultValue={event?.eventTimeLabel ?? ""}
         />
         <Field
+          label="Scheduled Date & Time"
+          name="scheduledAt"
+          type="datetime-local"
+          defaultValue={toDateTimeLocal(event?.scheduledAt)}
+          required={false}
+        />
+        <Field
           label="Type Label"
           name="eventTypeLabel"
           defaultValue={event?.eventTypeLabel ?? ""}
+          required={false}
         />
         <Field
           label="CTA Label"
@@ -65,6 +79,7 @@ export function EventForm({ event }: EventFormProps) {
           label="Background Image URL"
           name="backgroundImage"
           defaultValue={event?.backgroundImage ?? ""}
+          required={false}
         />
         <FileField
           label="Upload Event Image"
@@ -94,9 +109,7 @@ export function EventForm({ event }: EventFormProps) {
       </div>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          WhatsApp Message
-        </span>
+        <FormFieldLabel required={false}>WhatsApp Message</FormFieldLabel>
         <textarea
           name="whatsappMessage"
           rows={3}
@@ -126,22 +139,34 @@ export function EventForm({ event }: EventFormProps) {
   );
 }
 
+function toDateTimeLocal(value?: Date | string | null) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const offsetDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60000,
+  );
+  return offsetDate.toISOString().slice(0, 16);
+}
+
 function Field({
   label,
   name,
   defaultValue = "",
   type = "text",
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   type?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={required}>{label}</FormFieldLabel>
       <input
         name={name}
         type={type}
@@ -163,13 +188,11 @@ function FileField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={false}>{label}</FormFieldLabel>
       <input
         name={name}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,image/svg+xml"
         className="min-h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-sm text-white file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-ludo-black"
       />
       {value ? (

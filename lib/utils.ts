@@ -31,9 +31,21 @@ export function getFormNumber(formData: FormData, key: string, fallback = 0) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+export function getFormDate(formData: FormData, key: string) {
+  const raw = getFormString(formData, key);
+  if (!raw) return null;
+
+  const value = new Date(raw);
+  return Number.isNaN(value.getTime()) ? null : value;
+}
+
 export function getFormFile(formData: FormData, key: string) {
   const value = formData.get(key);
-  if (typeof File === "undefined" || !(value instanceof File) || value.size === 0) {
+  if (
+    typeof File === "undefined" ||
+    !(value instanceof File) ||
+    value.size === 0
+  ) {
     return null;
   }
   return value;

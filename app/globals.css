@@ -95,6 +95,18 @@ a {
   margin-inline: auto;
 }
 
+@keyframes brandWheel {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 430px) {
   .ludo-section-shell {
     width: min(100% - 24px, 1180px);

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { deleteUploadedAsset, saveUploadedImage } from "@/lib/upload";
+import { deleteUploadedAsset, saveUploadedMedia } from "@/lib/upload";
 import { getFormFile, getFormString } from "@/lib/utils";
 import { idSchema } from "@/lib/validations";
 import {
@@ -19,16 +19,17 @@ export async function uploadMedia(formData: FormData) {
 
   try {
     const file = getFormFile(formData, "file");
-    if (!file) throw new Error("Choose an image to upload.");
+    if (!file) throw new Error("Choose a media file to upload.");
 
-    await saveUploadedImage(file);
+    await saveUploadedMedia(file);
     revalidatePath("/");
+    revalidatePath("/admin/gallery");
     revalidatePath(adminPath);
   } catch (error) {
     redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
   }
 
-  redirectWithMessage(adminPath, "success", "Image uploaded.");
+  redirectWithMessage(adminPath, "success", "Media uploaded.");
 }
 
 export async function deleteMedia(formData: FormData) {
@@ -43,10 +44,11 @@ export async function deleteMedia(formData: FormData) {
     await prisma.mediaFile.delete({ where: { id } });
     await deleteUploadedAsset(media.url);
     revalidatePath("/");
+    revalidatePath("/admin/gallery");
     revalidatePath(adminPath);
   } catch (error) {
     redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
   }
 
-  redirectWithMessage(adminPath, "success", "Image deleted.");
+  redirectWithMessage(adminPath, "success", "Media deleted.");
 }

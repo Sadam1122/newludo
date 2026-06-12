@@ -1,6 +1,7 @@
 import type { LocationSetting } from "@prisma/client";
 import { Save } from "lucide-react";
 
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { updateLocation } from "@/server/actions/locationActions";
 
 type LocationFormProps = {
@@ -57,6 +58,7 @@ export function LocationForm({ location }: LocationFormProps) {
           label="Map Image URL"
           name="mapImage"
           defaultValue={location?.mapImage ?? ""}
+          required={false}
         />
         <FileField
           label="Upload Map Image"
@@ -66,9 +68,7 @@ export function LocationForm({ location }: LocationFormProps) {
       </div>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          Address
-        </span>
+        <FormFieldLabel>Address</FormFieldLabel>
         <textarea
           name="address"
           rows={3}
@@ -95,16 +95,16 @@ function Field({
   label,
   name,
   defaultValue = "",
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={required}>{label}</FormFieldLabel>
       <input
         name={name}
         defaultValue={defaultValue ?? ""}
@@ -125,13 +125,11 @@ function FileField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={false}>{label}</FormFieldLabel>
       <input
         name={name}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,image/svg+xml"
         className="min-h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-sm text-white file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-ludo-black"
       />
       {value ? (

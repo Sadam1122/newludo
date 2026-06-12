@@ -68,7 +68,9 @@ export default async function EventsPage({ searchParams }: PageProps) {
               >
                 <td className="px-4 py-4">
                   <p className="font-black text-white">{event.title}</p>
-                  <p className="text-white/60">{event.artistName}</p>
+                  <p className="text-white/60">
+                    {event.talentLabel}: {event.artistName}
+                  </p>
                   <p className="mt-1 text-xs font-semibold uppercase text-white/35">
                     Sort #{event.sortOrder}
                   </p>
@@ -83,6 +85,14 @@ export default async function EventsPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-4 text-white/70">
                   {event.eventDateLabel} &middot; {event.eventTimeLabel}
+                  {event.scheduledAt ? (
+                    <p className="mt-1 text-xs text-white/40">
+                      {event.scheduledAt.toLocaleString("id-ID", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  ) : null}
                 </td>
                 <td className="px-4 py-4">
                   <ActiveStatusBadge

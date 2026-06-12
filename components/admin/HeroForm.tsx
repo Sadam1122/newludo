@@ -1,23 +1,26 @@
 import type { HeroSection } from "@prisma/client";
-import { Save } from "lucide-react";
 
-import { updateHero } from "@/server/actions/heroActions";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
+import { createHero, updateHero } from "@/server/actions/heroActions";
 
 type HeroFormProps = {
   hero?: HeroSection | null;
 };
 
 export function HeroForm({ hero }: HeroFormProps) {
+  const isEditing = Boolean(hero);
+
   return (
-    <form action={updateHero} className="space-y-4">
+    <form action={isEditing ? updateHero : createHero} className="space-y-4">
       {hero ? <input type="hidden" name="id" value={hero.id} /> : null}
       {hero?.backgroundImage ? (
-        <div className="overflow-hidden rounded border border-white/10 bg-ludo-black">
+        <div className="mx-auto max-w-sm overflow-hidden rounded border border-white/10 bg-ludo-black">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={hero.backgroundImage}
             alt="Hero background preview"
-            className="h-56 w-full object-cover"
+            className="aspect-[4/5] w-full object-cover"
           />
         </div>
       ) : null}
@@ -49,9 +52,16 @@ export function HeroForm({ hero }: HeroFormProps) {
           defaultValue={hero?.ctaLabel ?? "BOOK YOUR TABLE NOW"}
         />
         <Field
+          label="Sort Order"
+          name="sortOrder"
+          type="number"
+          defaultValue={String(hero?.sortOrder ?? 0)}
+        />
+        <Field
           label="Background Image URL"
           name="backgroundImage"
           defaultValue={hero?.backgroundImage ?? ""}
+          required={false}
         />
         <FileField
           label="Upload Background Image"
@@ -61,9 +71,7 @@ export function HeroForm({ hero }: HeroFormProps) {
       </div>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          Subtitle
-        </span>
+        <FormFieldLabel>Subtitle</FormFieldLabel>
         <textarea
           name="subtitle"
           rows={3}
@@ -75,9 +83,7 @@ export function HeroForm({ hero }: HeroFormProps) {
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          CTA WhatsApp Message
-        </span>
+        <FormFieldLabel>CTA WhatsApp Message</FormFieldLabel>
         <textarea
           name="ctaWhatsappMessage"
           rows={3}
@@ -94,13 +100,17 @@ export function HeroForm({ hero }: HeroFormProps) {
         defaultChecked={hero?.isActive ?? true}
       />
 
-      <button
-        type="submit"
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-ludo-red px-4 text-sm font-black uppercase text-white transition hover:bg-red-500 sm:w-auto"
+      <ConfirmSubmitButton
+        title={isEditing ? "Save hero slide?" : "Create hero slide?"}
+        description={
+          isEditing
+            ? "This will update the selected hero slide and refresh the public homepage carousel if it is active."
+            : "This will create a new hero slide. If Active is enabled, it can appear in the public homepage carousel."
+        }
+        confirmLabel={isEditing ? "Save Hero" : "Create Hero"}
       >
-        <Save className="h-4 w-4" aria-hidden="true" />
-        Save Hero
-      </button>
+        {isEditing ? "Save Hero" : "Create Hero"}
+      </ConfirmSubmitButton>
     </form>
   );
 }
@@ -109,18 +119,21 @@ function Field({
   label,
   name,
   defaultValue = "",
+  type = "text",
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
+  type?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={required}>{label}</FormFieldLabel>
       <input
         name={name}
+        type={type}
         defaultValue={defaultValue ?? ""}
         className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
       />
@@ -139,13 +152,11 @@ function FileField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={false}>{label}</FormFieldLabel>
       <input
         name={name}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,image/svg+xml"
         className="min-h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-sm text-white file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-ludo-black"
       />
       {value ? (

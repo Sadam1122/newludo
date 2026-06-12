@@ -88,6 +88,7 @@ export function EventBanner({
 
   return (
     <section
+      id="events"
       className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#050505_0%,#5A0505_48%,#050505_100%)] py-12 [touch-action:pan-y] sm:py-20"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -184,7 +185,7 @@ export function EventBanner({
               <div className="mt-6 space-y-3 sm:mt-7">
                 <InfoRow
                   icon={<UserRound className="h-5 w-5" />}
-                  label="Artist"
+                  label={event.talentLabel}
                 >
                   {event.artistName}
                 </InfoRow>

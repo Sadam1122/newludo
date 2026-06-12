@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { MatchStatus, PrismaClient } from "@prisma/client";
+import { MatchDisplayMode, MatchStatus, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -23,6 +23,13 @@ const flags = {
   portugal: "/uploads/flag-portugal.svg",
   spain: "/uploads/flag-spain.svg",
 };
+
+function daysFromNow(days: number, hour = 20) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(hour, 0, 0, 0);
+  return date;
+}
 
 async function main() {
   const passwordHash = await bcrypt.hash("AdminLudo123!", 12);
@@ -49,6 +56,12 @@ async function main() {
       siteTagline: "EAT \u00B7 WATCH \u00B7 CONNECT",
       whatsappNumber: "6282318560003",
       defaultWhatsappMessage: "Halo LUDO, saya ingin reservasi meja.",
+      matchSectionTitle: "UPCOMING SPORTS SCHEDULE",
+      headerBookingLabel: "Book",
+      headerBookingVisible: true,
+      eventMiceLabel: "Event / MICE",
+      eventMiceUrl: "/event-mice",
+      eventMiceVisible: true,
       instagramHandle: "@ludosportskitchen",
       instagramUrl: "https://www.instagram.com/ludosportskitchen/",
       tiktokHandle: "@ludosportskitchen",
@@ -63,6 +76,7 @@ async function main() {
   await prisma.matchCard.createMany({
     data: [
       {
+        displayMode: MatchDisplayMode.TEAM_MATCH,
         leagueName: "PILDUN 2026",
         homeTeamName: "England",
         awayTeamName: "Spain",
@@ -70,6 +84,7 @@ async function main() {
         awayTeamLogo: flags.spain,
         matchDateLabel: "FRI",
         matchTimeLabel: "22:00",
+        scheduledAt: daysFromNow(3, 22),
         status: MatchStatus.BOOK,
         buttonLabel: "BOOK",
         whatsappMessage:
@@ -77,6 +92,7 @@ async function main() {
         sortOrder: 1,
       },
       {
+        displayMode: MatchDisplayMode.TEAM_MATCH,
         leagueName: "PILDUN 2026",
         homeTeamName: "Brazil",
         awayTeamName: "Argentina",
@@ -84,6 +100,7 @@ async function main() {
         awayTeamLogo: flags.argentina,
         matchDateLabel: "SAT",
         matchTimeLabel: "01:00",
+        scheduledAt: daysFromNow(4, 1),
         status: MatchStatus.LIMITED,
         buttonLabel: "ONLY 2 TABLES LEFT",
         whatsappMessage:
@@ -91,6 +108,7 @@ async function main() {
         sortOrder: 2,
       },
       {
+        displayMode: MatchDisplayMode.TEAM_MATCH,
         leagueName: "PILDUN 2026",
         homeTeamName: "France",
         awayTeamName: "Germany",
@@ -98,12 +116,14 @@ async function main() {
         awayTeamLogo: flags.germany,
         matchDateLabel: "SAT",
         matchTimeLabel: "22:00",
+        scheduledAt: daysFromNow(4, 22),
         status: MatchStatus.FULL_BOOKED,
         buttonLabel: "FULL BOOKED",
         showSoldOutStamp: true,
         sortOrder: 3,
       },
       {
+        displayMode: MatchDisplayMode.TEAM_MATCH,
         leagueName: "PILDUN 2026",
         homeTeamName: "Netherlands",
         awayTeamName: "Portugal",
@@ -111,6 +131,7 @@ async function main() {
         awayTeamLogo: flags.portugal,
         matchDateLabel: "SUN",
         matchTimeLabel: "02:00",
+        scheduledAt: daysFromNow(5, 2),
         status: MatchStatus.CURRENTLY_SHOWING,
         buttonLabel: "CURRENTLY SHOWING",
         whatsappMessage:
@@ -118,6 +139,41 @@ async function main() {
         sortOrder: 4,
       },
       {
+        displayMode: MatchDisplayMode.GENERAL_EVENT,
+        leagueName: "FORMULA 1",
+        title: "F1 British Grand Prix",
+        categoryLabel: "F1",
+        description:
+          "Live race screening with big screen, race night menu, and LUDO crowd energy.",
+        eventImage: eventDjNightImage,
+        matchDateLabel: "SUN",
+        matchTimeLabel: "20:00",
+        scheduledAt: daysFromNow(6, 20),
+        status: MatchStatus.BOOK,
+        buttonLabel: "BOOK RACE NIGHT",
+        whatsappMessage:
+          "Halo LUDO, saya ingin booking untuk F1 British Grand Prix.",
+        sortOrder: 5,
+      },
+      {
+        displayMode: MatchDisplayMode.GENERAL_EVENT,
+        leagueName: "MOTOGP",
+        title: "MotoGP Watch Party",
+        categoryLabel: "MotoGP",
+        description:
+          "Watch party untuk race weekend, cocok untuk komunitas dan gathering.",
+        eventImage: eventLiveNightImage,
+        matchDateLabel: "MON",
+        matchTimeLabel: "19:30",
+        scheduledAt: daysFromNow(8, 19),
+        status: MatchStatus.LIMITED,
+        buttonLabel: "LIMITED SEATS",
+        whatsappMessage:
+          "Halo LUDO, saya ingin booking untuk MotoGP Watch Party.",
+        sortOrder: 6,
+      },
+      {
+        displayMode: MatchDisplayMode.TEAM_MATCH,
         leagueName: "PILDUN 2026",
         homeTeamName: "Spain",
         awayTeamName: "Germany",
@@ -125,13 +181,15 @@ async function main() {
         awayTeamLogo: flags.germany,
         matchDateLabel: "MON",
         matchTimeLabel: "23:00",
+        scheduledAt: daysFromNow(9, 23),
         status: MatchStatus.BOOK,
         buttonLabel: "BOOK",
         whatsappMessage:
           "Halo LUDO, saya ingin booking match Spain vs Germany.",
-        sortOrder: 5,
+        sortOrder: 7,
       },
       {
+        displayMode: MatchDisplayMode.TEAM_MATCH,
         leagueName: "PILDUN 2026",
         homeTeamName: "Brazil",
         awayTeamName: "England",
@@ -139,11 +197,12 @@ async function main() {
         awayTeamLogo: flags.england,
         matchDateLabel: "TUE",
         matchTimeLabel: "02:00",
+        scheduledAt: daysFromNow(10, 2),
         status: MatchStatus.LIMITED,
         buttonLabel: "LIMITED SEATS",
         whatsappMessage:
           "Halo LUDO, saya ingin booking match Brazil vs England.",
-        sortOrder: 6,
+        sortOrder: 8,
       },
     ],
   });
@@ -160,6 +219,7 @@ async function main() {
         ctaLabel: "BOOK YOUR TABLE NOW",
         ctaWhatsappMessage: "Halo LUDO, saya ingin reservasi meja.",
         backgroundImage: heroSportsNightImage,
+        sortOrder: 1,
       },
       {
         headlineLine1: "WORLD CUP",
@@ -172,6 +232,7 @@ async function main() {
         ctaWhatsappMessage:
           "Halo LUDO, saya ingin reservasi meja untuk nonton Pildun.",
         backgroundImage: heroFoodMatchImage,
+        sortOrder: 2,
       },
     ],
   });
@@ -182,8 +243,10 @@ async function main() {
       {
         title: "Live Performance",
         artistName: "AGNES MONICA",
+        talentLabel: "Guest Star",
         eventDateLabel: "FRIDAY, 25 APRIL",
         eventTimeLabel: "START 9PM TILL DROP",
+        scheduledAt: daysFromNow(11, 21),
         eventTypeLabel: "LIVE PERFORMANCE",
         headlineLine1: "FROM",
         headlineHighlight1: "DAYTIME.",
@@ -198,8 +261,10 @@ async function main() {
       {
         title: "DJ Night",
         artistName: "LUDO NIGHT",
+        talentLabel: "Talent",
         eventDateLabel: "SATURDAY, 26 APRIL",
         eventTimeLabel: "START 8PM TILL LATE",
+        scheduledAt: daysFromNow(12, 20),
         eventTypeLabel: "DJ NIGHT",
         headlineLine1: "LIVE",
         headlineHighlight1: "BEATS.",
@@ -276,8 +341,11 @@ async function main() {
       brandName: "Coca-Cola",
       brandLogo,
       bottomText: "EXCLUSIVE COLLABORATION",
+      sortOrder: 1,
     },
   });
+
+  await prisma.galleryItem.deleteMany();
 
   await prisma.mediaFile.deleteMany({
     where: {

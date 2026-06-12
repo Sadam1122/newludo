@@ -23,6 +23,13 @@ model SiteSetting {
   siteTagline            String   @default("EAT · WATCH · CONNECT")
   whatsappNumber         String   @default("6282318560003")
   defaultWhatsappMessage String   @default("Halo LUDO, saya ingin reservasi meja.")
+  matchSectionTitle      String   @default("THIS WEEK MATCH")
+  headerBookingLabel     String   @default("WhatsApp")
+  headerBookingUrl       String?
+  headerBookingVisible   Boolean  @default(true)
+  eventMiceLabel         String   @default("Event / MICE")
+  eventMiceUrl           String   @default("/event-mice")
+  eventMiceVisible       Boolean  @default(true)
   instagramHandle        String   @default("@ludosportskitchen")
   instagramUrl           String   @default("https://www.instagram.com/ludosportskitchen/")
   tiktokHandle           String   @default("@ludosportskitchen")
@@ -34,22 +41,28 @@ model SiteSetting {
 }
 
 model MatchCard {
-  id               String      @id @default(cuid())
+  id               String           @id @default(cuid())
+  displayMode      MatchDisplayMode @default(TEAM_MATCH)
   leagueName       String
-  homeTeamName     String
-  awayTeamName     String
+  title            String?
+  categoryLabel    String?
+  description      String?          @db.Text
+  eventImage       String?
+  homeTeamName     String?
+  awayTeamName     String?
   homeTeamLogo     String?
   awayTeamLogo     String?
   matchDateLabel   String
   matchTimeLabel   String
+  scheduledAt      DateTime?
   status           MatchStatus
   buttonLabel      String
   whatsappMessage  String?
-  showSoldOutStamp Boolean     @default(false)
-  isActive         Boolean     @default(true)
-  sortOrder        Int         @default(0)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  showSoldOutStamp Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  sortOrder        Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 }
 
 enum MatchStatus {
@@ -57,6 +70,11 @@ enum MatchStatus {
   LIMITED
   FULL_BOOKED
   CURRENTLY_SHOWING
+}
+
+enum MatchDisplayMode {
+  TEAM_MATCH
+  GENERAL_EVENT
 }
 
 model HeroSection {
@@ -70,16 +88,19 @@ model HeroSection {
   ctaWhatsappMessage String   @default("Halo LUDO, saya ingin reservasi meja.")
   backgroundImage    String?
   isActive           Boolean  @default(true)
+  sortOrder          Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
 
 model EventBanner {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   title              String
   artistName         String
+  talentLabel        String    @default("Talent")
   eventDateLabel     String
   eventTimeLabel     String
+  scheduledAt        DateTime?
   eventTypeLabel     String?
   headlineLine1      String
   headlineHighlight1 String
@@ -88,10 +109,10 @@ model EventBanner {
   backgroundImage    String?
   ctaLabel           String
   whatsappMessage    String?
-  isActive           Boolean  @default(true)
-  sortOrder          Int      @default(0)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  isActive           Boolean   @default(true)
+  sortOrder          Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model LocationSetting {
@@ -127,6 +148,7 @@ model BrandSection {
   brandLogo            String?
   bottomText           String   @default("EXCLUSIVE COLLABORATION")
   isActive             Boolean  @default(true)
+  sortOrder            Int      @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -139,4 +161,16 @@ model MediaFile {
   size      Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model GalleryItem {
+  id           String   @id @default(cuid())
+  title        String
+  caption      String?  @db.Text
+  videoUrl     String   @db.Text
+  thumbnailUrl String?  @db.Text
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

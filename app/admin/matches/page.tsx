@@ -81,10 +81,19 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                     />
                     <div>
                       <p className="font-black text-white">
-                        {match.leagueName}
+                        {match.displayMode === "GENERAL_EVENT"
+                          ? (match.title ?? match.leagueName)
+                          : match.leagueName}
                       </p>
                       <p className="text-white/60">
-                        {match.homeTeamName} vs {match.awayTeamName}
+                        {match.displayMode === "GENERAL_EVENT"
+                          ? (match.categoryLabel ?? "General broadcast")
+                          : `${match.homeTeamName ?? "Home"} vs ${
+                              match.awayTeamName ?? "Away"
+                            }`}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold uppercase text-white/35">
+                        {match.displayMode.replace("_", " ")}
                       </p>
                     </div>
                   </div>
@@ -100,6 +109,14 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-4 text-white/70">
                   {match.matchDateLabel} &middot; {match.matchTimeLabel}
+                  {match.scheduledAt ? (
+                    <p className="mt-1 text-xs text-white/40">
+                      {match.scheduledAt.toLocaleString("id-ID", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  ) : null}
                 </td>
                 <td className="px-4 py-4">
                   <span
@@ -147,8 +164,14 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                     <DeleteConfirmButton
                       action={deleteMatch}
                       id={match.id}
-                      itemType="match"
-                      itemLabel={`${match.leagueName}: ${match.homeTeamName} vs ${match.awayTeamName}`}
+                      itemType="schedule item"
+                      itemLabel={
+                        match.displayMode === "GENERAL_EVENT"
+                          ? (match.title ?? match.leagueName)
+                          : `${match.leagueName}: ${
+                              match.homeTeamName ?? "Home"
+                            } vs ${match.awayTeamName ?? "Away"}`
+                      }
                     />
                   </div>
                 </td>

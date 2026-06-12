@@ -6,6 +6,7 @@ import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getFormBoolean,
+  getFormDate,
   getFormFile,
   getFormNumber,
   getFormOptionalString,
@@ -22,13 +23,19 @@ const adminPath = "/admin/matches";
 
 async function buildMatchData(formData: FormData) {
   const parsed = matchSchema.parse({
+    displayMode: getFormString(formData, "displayMode", "TEAM_MATCH"),
     leagueName: getFormString(formData, "leagueName"),
-    homeTeamName: getFormString(formData, "homeTeamName"),
-    awayTeamName: getFormString(formData, "awayTeamName"),
+    title: getFormOptionalString(formData, "title"),
+    categoryLabel: getFormOptionalString(formData, "categoryLabel"),
+    description: getFormOptionalString(formData, "description"),
+    eventImage: getFormOptionalString(formData, "eventImage"),
+    homeTeamName: getFormOptionalString(formData, "homeTeamName"),
+    awayTeamName: getFormOptionalString(formData, "awayTeamName"),
     homeTeamLogo: getFormOptionalString(formData, "homeTeamLogo"),
     awayTeamLogo: getFormOptionalString(formData, "awayTeamLogo"),
     matchDateLabel: getFormString(formData, "matchDateLabel"),
     matchTimeLabel: getFormString(formData, "matchTimeLabel"),
+    scheduledAt: getFormDate(formData, "scheduledAt"),
     status: getFormString(formData, "status"),
     buttonLabel: getFormString(formData, "buttonLabel"),
     whatsappMessage: getFormOptionalString(formData, "whatsappMessage"),
@@ -39,6 +46,7 @@ async function buildMatchData(formData: FormData) {
 
   const homeLogoFile = getFormFile(formData, "homeTeamLogoFile");
   const awayLogoFile = getFormFile(formData, "awayTeamLogoFile");
+  const eventImageFile = getFormFile(formData, "eventImageFile");
 
   if (homeLogoFile) {
     const media = await saveUploadedImage(homeLogoFile);
@@ -48,6 +56,11 @@ async function buildMatchData(formData: FormData) {
   if (awayLogoFile) {
     const media = await saveUploadedImage(awayLogoFile);
     parsed.awayTeamLogo = media.url;
+  }
+
+  if (eventImageFile) {
+    const media = await saveUploadedImage(eventImageFile);
+    parsed.eventImage = media.url;
   }
 
   return parsed;

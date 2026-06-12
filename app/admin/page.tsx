@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  Clapperboard,
   HelpCircle,
   Home,
   Image,
@@ -23,6 +24,7 @@ const quickActions = [
   { href: "/admin/matches", label: "Manage Matches", icon: Trophy },
   { href: "/admin/hero", label: "Edit Hero", icon: Home },
   { href: "/admin/events", label: "Manage Events", icon: CalendarDays },
+  { href: "/admin/gallery", label: "Manage Gallery", icon: Clapperboard },
   { href: "/admin/location", label: "Edit Location", icon: MapPin },
   { href: "/admin/faq", label: "Manage FAQ", icon: HelpCircle },
   { href: "/admin/brands", label: "Manage Brands", icon: Shield },
@@ -42,6 +44,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     activeEvents,
     totalFAQ,
     mediaFiles,
+    activeGalleryItems,
     latestRows,
   ] = await Promise.all([
     prisma.matchCard.count(),
@@ -49,15 +52,44 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     prisma.eventBanner.count({ where: { isActive: true } }),
     prisma.fAQItem.count(),
     prisma.mediaFile.count(),
+    prisma.galleryItem.count({ where: { isActive: true } }),
     Promise.all([
-      prisma.matchCard.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.heroSection.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.eventBanner.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.locationSetting.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.fAQItem.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.brandSection.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.siteSetting.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-      prisma.mediaFile.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
+      prisma.matchCard.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.heroSection.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.eventBanner.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.locationSetting.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.fAQItem.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.brandSection.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.galleryItem.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.siteSetting.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
+      prisma.mediaFile.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      }),
     ]),
   ]);
 
@@ -85,6 +117,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         <AdminCard title="Active Matches" value={activeMatches} />
         <AdminCard title="Active Events" value={activeEvents} />
         <AdminCard title="Total FAQ" value={totalFAQ} />
+        <AdminCard title="Active Gallery" value={activeGalleryItems} />
         <AdminCard title="Media Files" value={mediaFiles} />
         <AdminCard
           title="Last Updated"

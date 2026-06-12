@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
+import { cn } from "@/lib/utils";
+import { createWhatsappUrl } from "@/lib/whatsapp";
 
 type HeaderProps = {
   siteName: string;
@@ -9,6 +12,12 @@ type HeaderProps = {
   whatsappNumber: string;
   defaultWhatsappMessage: string;
   menuUrl: string;
+  bookingLabel: string;
+  bookingUrl: string | null;
+  bookingVisible: boolean;
+  eventMiceLabel: string;
+  eventMiceUrl: string;
+  eventMiceVisible: boolean;
 };
 
 export function Header({
@@ -17,7 +26,16 @@ export function Header({
   whatsappNumber,
   defaultWhatsappMessage,
   menuUrl,
+  bookingLabel,
+  bookingUrl,
+  bookingVisible,
+  eventMiceLabel,
+  eventMiceUrl,
+  eventMiceVisible,
 }: HeaderProps) {
+  const bookingHref =
+    bookingUrl || createWhatsappUrl(whatsappNumber, defaultWhatsappMessage);
+
   return (
     <header className="sticky top-0 z-[80] border-b border-[#2A2A2A] bg-[#050505]/95 backdrop-blur-xl">
       <div className="ludo-section-shell relative z-10 flex min-h-[76px] flex-col gap-3 py-3 sm:min-h-[78px] sm:flex-row sm:items-center sm:justify-between sm:py-0">
@@ -44,17 +62,13 @@ export function Header({
         </Link>
 
         <nav
-          className="relative z-30 grid w-full grid-cols-3 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end"
+          className="relative z-30 grid w-full grid-cols-2 items-center gap-2 min-[420px]:grid-cols-4 sm:flex sm:w-auto sm:flex-wrap sm:justify-end"
           aria-label="Main navigation"
         >
-          <WhatsAppButton
-            phoneNumber={whatsappNumber}
-            message={defaultWhatsappMessage}
-            variant="small"
-            className="w-full px-2 sm:w-auto sm:px-4"
-          >
-            WhatsApp
-          </WhatsAppButton>
+          <HeaderPill href="/">Home</HeaderPill>
+          {eventMiceVisible ? (
+            <HeaderPill href={eventMiceUrl}>{eventMiceLabel}</HeaderPill>
+          ) : null}
           <a
             href={menuUrl}
             target="_blank"
@@ -63,6 +77,22 @@ export function Header({
           >
             Our Menu
           </a>
+          {bookingVisible ? (
+            bookingUrl ? (
+              <HeaderPill href={bookingHref} variant="green">
+                {bookingLabel}
+              </HeaderPill>
+            ) : (
+              <WhatsAppButton
+                phoneNumber={whatsappNumber}
+                message={defaultWhatsappMessage}
+                variant="small"
+                className="w-full px-2 sm:w-auto sm:px-4"
+              >
+                {bookingLabel}
+              </WhatsAppButton>
+            )
+          ) : null}
           <Link
             href="/admin/login"
             className="relative z-30 inline-flex min-h-10 touch-manipulation items-center justify-center rounded-full border border-[#2A2A2A] px-2 py-2 text-center text-[0.68rem] font-black uppercase text-[#F8EDE7] transition hover:border-[#EF1F28] hover:text-[#EF1F28] sm:px-4 sm:text-xs"
@@ -72,5 +102,33 @@ export function Header({
         </nav>
       </div>
     </header>
+  );
+}
+
+function HeaderPill({
+  href,
+  children,
+  variant = "dark",
+}: {
+  href: string;
+  children: ReactNode;
+  variant?: "dark" | "green";
+}) {
+  const external = href.startsWith("http");
+
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      className={cn(
+        "relative z-30 inline-flex min-h-10 touch-manipulation items-center justify-center rounded-full px-2 py-2 text-center text-[0.68rem] font-black uppercase transition sm:px-4 sm:text-xs",
+        variant === "green"
+          ? "bg-[#25D366] text-[#050505] shadow-[0_10px_26px_rgba(37,211,102,0.22)] hover:bg-[#48e583]"
+          : "border border-[#2A2A2A] text-[#F8EDE7] hover:border-[#F7C600] hover:text-[#F7C600]",
+      )}
+    >
+      {children}
+    </a>
   );
 }

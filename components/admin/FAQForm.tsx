@@ -1,6 +1,7 @@
 import type { FAQItem } from "@prisma/client";
 import { Save } from "lucide-react";
 
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { createFAQ, updateFAQ } from "@/server/actions/faqActions";
 
 type FAQFormProps = {
@@ -29,9 +30,7 @@ export function FAQForm({ faq }: FAQFormProps) {
       </div>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-white/75">
-          Answer
-        </span>
+        <FormFieldLabel>Answer</FormFieldLabel>
         <textarea
           name="answer"
           rows={4}
@@ -70,9 +69,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel>{label}</FormFieldLabel>
       <input
         name={name}
         type={type}

@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  Clapperboard,
   HelpCircle,
   Home,
   Image,
@@ -22,6 +23,7 @@ export const adminNavItems = [
   { href: "/admin/matches", label: "Matches", icon: Trophy },
   { href: "/admin/hero", label: "Hero", icon: Home },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
+  { href: "/admin/gallery", label: "Gallery", icon: Clapperboard },
   { href: "/admin/location", label: "Location", icon: MapPin },
   { href: "/admin/faq", label: "FAQ", icon: HelpCircle },
   { href: "/admin/brands", label: "Brands", icon: Shield },

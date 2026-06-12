@@ -6,6 +6,7 @@ import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getFormBoolean,
+  getFormDate,
   getFormFile,
   getFormNumber,
   getFormOptionalString,
@@ -24,8 +25,10 @@ async function buildEventData(formData: FormData) {
   const parsed = eventSchema.parse({
     title: getFormString(formData, "title"),
     artistName: getFormString(formData, "artistName"),
+    talentLabel: getFormString(formData, "talentLabel", "Talent"),
     eventDateLabel: getFormString(formData, "eventDateLabel"),
     eventTimeLabel: getFormString(formData, "eventTimeLabel"),
+    scheduledAt: getFormDate(formData, "scheduledAt"),
     eventTypeLabel: getFormOptionalString(formData, "eventTypeLabel"),
     headlineLine1: getFormString(formData, "headlineLine1"),
     headlineHighlight1: getFormString(formData, "headlineHighlight1"),

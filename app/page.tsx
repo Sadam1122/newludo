@@ -26,6 +26,7 @@ import type {
   PublicSettings,
 } from "@/components/public/types";
 import { prisma } from "@/lib/prisma";
+import { getJakartaStartOfToday, isUpcomingOrUndated } from "@/lib/schedule";
 import {
   DEFAULT_OG_IMAGE,
   absoluteUrl,
@@ -95,6 +96,13 @@ const DEFAULT_SETTINGS: PublicSettings = {
   tiktokUrl: "https://www.tiktok.com/@ludosportskitchen",
   menuUrl:
     "https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r",
+  matchSectionTitle: "THIS WEEK MATCH",
+  headerBookingLabel: "WhatsApp",
+  headerBookingUrl: null,
+  headerBookingVisible: true,
+  eventMiceLabel: "Event / MICE",
+  eventMiceUrl: "/event-mice",
+  eventMiceVisible: true,
   footerCopyright:
     "\u00A9 2026 LUDO SPORTS KITCHEN & COFFEE. ALL RIGHTS RESERVED.",
 };
@@ -140,13 +148,19 @@ const DEFAULT_FLAGS = {
 const DEFAULT_MATCHES: PublicMatch[] = [
   {
     id: "default-match-1",
+    displayMode: "TEAM_MATCH",
     leagueName: "PILDUN 2026",
+    title: null,
+    categoryLabel: null,
+    description: null,
+    eventImage: null,
     homeTeamName: "England",
     awayTeamName: "Spain",
     homeTeamLogo: DEFAULT_FLAGS.england,
     awayTeamLogo: DEFAULT_FLAGS.spain,
     matchDateLabel: "FRI",
     matchTimeLabel: "22:00",
+    scheduledAt: null,
     status: "BOOK",
     buttonLabel: "BOOK",
     whatsappMessage: "Halo LUDO, saya ingin booking match England vs Spain.",
@@ -154,13 +168,19 @@ const DEFAULT_MATCHES: PublicMatch[] = [
   },
   {
     id: "default-match-2",
+    displayMode: "TEAM_MATCH",
     leagueName: "PILDUN 2026",
+    title: null,
+    categoryLabel: null,
+    description: null,
+    eventImage: null,
     homeTeamName: "Brazil",
     awayTeamName: "Argentina",
     homeTeamLogo: DEFAULT_FLAGS.brazil,
     awayTeamLogo: DEFAULT_FLAGS.argentina,
     matchDateLabel: "SAT",
     matchTimeLabel: "01:00",
+    scheduledAt: null,
     status: "LIMITED",
     buttonLabel: "ONLY 2 TABLES LEFT",
     whatsappMessage: "Halo LUDO, saya ingin booking match Brazil vs Argentina.",
@@ -168,13 +188,19 @@ const DEFAULT_MATCHES: PublicMatch[] = [
   },
   {
     id: "default-match-3",
+    displayMode: "TEAM_MATCH",
     leagueName: "PILDUN 2026",
+    title: null,
+    categoryLabel: null,
+    description: null,
+    eventImage: null,
     homeTeamName: "France",
     awayTeamName: "Germany",
     homeTeamLogo: DEFAULT_FLAGS.france,
     awayTeamLogo: DEFAULT_FLAGS.germany,
     matchDateLabel: "SAT",
     matchTimeLabel: "22:00",
+    scheduledAt: null,
     status: "FULL_BOOKED",
     buttonLabel: "FULL BOOKED",
     whatsappMessage: null,
@@ -182,13 +208,19 @@ const DEFAULT_MATCHES: PublicMatch[] = [
   },
   {
     id: "default-match-4",
+    displayMode: "TEAM_MATCH",
     leagueName: "PILDUN 2026",
+    title: null,
+    categoryLabel: null,
+    description: null,
+    eventImage: null,
     homeTeamName: "Netherlands",
     awayTeamName: "Portugal",
     homeTeamLogo: DEFAULT_FLAGS.netherlands,
     awayTeamLogo: DEFAULT_FLAGS.portugal,
     matchDateLabel: "SUN",
     matchTimeLabel: "02:00",
+    scheduledAt: null,
     status: "CURRENTLY_SHOWING",
     buttonLabel: "CURRENTLY SHOWING",
     whatsappMessage:
@@ -197,13 +229,19 @@ const DEFAULT_MATCHES: PublicMatch[] = [
   },
   {
     id: "default-match-5",
+    displayMode: "TEAM_MATCH",
     leagueName: "PILDUN 2026",
+    title: null,
+    categoryLabel: null,
+    description: null,
+    eventImage: null,
     homeTeamName: "Spain",
     awayTeamName: "Germany",
     homeTeamLogo: DEFAULT_FLAGS.spain,
     awayTeamLogo: DEFAULT_FLAGS.germany,
     matchDateLabel: "MON",
     matchTimeLabel: "23:00",
+    scheduledAt: null,
     status: "BOOK",
     buttonLabel: "BOOK",
     whatsappMessage: "Halo LUDO, saya ingin booking match Spain vs Germany.",
@@ -211,13 +249,20 @@ const DEFAULT_MATCHES: PublicMatch[] = [
   },
   {
     id: "default-match-6",
+    displayMode: "GENERAL_EVENT",
     leagueName: "PILDUN 2026",
-    homeTeamName: "Brazil",
-    awayTeamName: "England",
-    homeTeamLogo: DEFAULT_FLAGS.brazil,
-    awayTeamLogo: DEFAULT_FLAGS.england,
+    title: "MotoGP Watch Party",
+    categoryLabel: "MotoGP",
+    description:
+      "Race night, big screen, cold drinks, and full throttle crowd.",
+    eventImage: "/uploads/event-dj-night.png",
+    homeTeamName: null,
+    awayTeamName: null,
+    homeTeamLogo: null,
+    awayTeamLogo: null,
     matchDateLabel: "TUE",
     matchTimeLabel: "02:00",
+    scheduledAt: null,
     status: "LIMITED",
     buttonLabel: "LIMITED SEATS",
     whatsappMessage: "Halo LUDO, saya ingin booking match Brazil vs England.",
@@ -230,8 +275,10 @@ const DEFAULT_EVENTS: PublicEvent[] = [
     id: "default-event-1",
     title: "Live Performance",
     artistName: "AGNES MONICA",
+    talentLabel: "Talent",
     eventDateLabel: "FRIDAY, 25 APRIL",
     eventTimeLabel: "START 9PM TILL DROP",
+    scheduledAt: null,
     eventTypeLabel: "LIVE PERFORMANCE",
     headlineLine1: "FROM",
     headlineHighlight1: "DAYTIME.",
@@ -246,8 +293,10 @@ const DEFAULT_EVENTS: PublicEvent[] = [
     id: "default-event-2",
     title: "Match Night",
     artistName: "LUDO CROWD",
+    talentLabel: "Talent",
     eventDateLabel: "SATURDAY, 26 APRIL",
     eventTimeLabel: "START 8PM TILL LATE",
+    scheduledAt: null,
     eventTypeLabel: "MATCH NIGHT",
     headlineLine1: "BIG",
     headlineHighlight1: "SCREEN.",
@@ -272,14 +321,17 @@ const DEFAULT_LOCATION: PublicLocation = {
   tiktokUrl: "https://www.tiktok.com/@ludosportskitchen",
 };
 
-const DEFAULT_BRAND: PublicBrand = {
-  titleBeforeHighlight: "TRUSTED BY",
-  titleHighlight: "LEADING BRANDS",
-  subtitle: "Official Brand Partner",
-  brandName: "Coca-Cola",
-  brandLogo: "/Coca-Cola_logo.svg.png",
-  bottomText: "EXCLUSIVE COLLABORATION",
-};
+const DEFAULT_BRANDS: PublicBrand[] = [
+  {
+    id: "default-brand-coca-cola",
+    titleBeforeHighlight: "TRUSTED BY",
+    titleHighlight: "LEADING BRANDS",
+    subtitle: "Official Brand Partner",
+    brandName: "Coca-Cola",
+    brandLogo: "/Coca-Cola_logo.svg.png",
+    bottomText: "EXCLUSIVE COLLABORATION",
+  },
+];
 
 const DEFAULT_FAQS: PublicFAQ[] = [
   {
@@ -321,11 +373,11 @@ type HomepageContent = readonly [
   EventBannerModel[],
   LocationSetting | null,
   FAQItem[],
-  BrandSectionModel | null,
+  BrandSectionModel[],
 ];
 
 export default async function HomePage() {
-  const [settings, heroes, matches, events, location, faqs, brand] =
+  const [settings, heroes, matches, events, location, faqs, brands] =
     await getHomepageContent();
 
   const publicSettings: PublicSettings = {
@@ -341,6 +393,18 @@ export default async function HomePage() {
     tiktokHandle: settings?.tiktokHandle ?? DEFAULT_SETTINGS.tiktokHandle,
     tiktokUrl: settings?.tiktokUrl ?? DEFAULT_SETTINGS.tiktokUrl,
     menuUrl: settings?.menuUrl ?? DEFAULT_SETTINGS.menuUrl,
+    matchSectionTitle:
+      settings?.matchSectionTitle ?? DEFAULT_SETTINGS.matchSectionTitle,
+    headerBookingLabel:
+      settings?.headerBookingLabel ?? DEFAULT_SETTINGS.headerBookingLabel,
+    headerBookingUrl:
+      settings?.headerBookingUrl ?? DEFAULT_SETTINGS.headerBookingUrl,
+    headerBookingVisible:
+      settings?.headerBookingVisible ?? DEFAULT_SETTINGS.headerBookingVisible,
+    eventMiceLabel: settings?.eventMiceLabel ?? DEFAULT_SETTINGS.eventMiceLabel,
+    eventMiceUrl: settings?.eventMiceUrl ?? DEFAULT_SETTINGS.eventMiceUrl,
+    eventMiceVisible:
+      settings?.eventMiceVisible ?? DEFAULT_SETTINGS.eventMiceVisible,
     footerCopyright:
       settings?.footerCopyright ?? DEFAULT_SETTINGS.footerCopyright,
   };
@@ -364,13 +428,19 @@ export default async function HomePage() {
     matches.length > 0
       ? matches.map((match) => ({
           id: match.id,
+          displayMode: match.displayMode,
           leagueName: match.leagueName,
+          title: match.title,
+          categoryLabel: match.categoryLabel,
+          description: match.description,
+          eventImage: match.eventImage,
           homeTeamName: match.homeTeamName,
           awayTeamName: match.awayTeamName,
           homeTeamLogo: match.homeTeamLogo,
           awayTeamLogo: match.awayTeamLogo,
           matchDateLabel: match.matchDateLabel,
           matchTimeLabel: match.matchTimeLabel,
+          scheduledAt: match.scheduledAt?.toISOString() ?? null,
           status: match.status,
           buttonLabel: match.buttonLabel,
           whatsappMessage: match.whatsappMessage,
@@ -384,8 +454,10 @@ export default async function HomePage() {
           id: event.id,
           title: event.title,
           artistName: event.artistName,
+          talentLabel: event.talentLabel,
           eventDateLabel: event.eventDateLabel,
           eventTimeLabel: event.eventTimeLabel,
+          scheduledAt: event.scheduledAt?.toISOString() ?? null,
           eventTypeLabel: event.eventTypeLabel,
           headlineLine1: event.headlineLine1,
           headlineHighlight1: event.headlineHighlight1,
@@ -419,19 +491,22 @@ export default async function HomePage() {
         }))
       : DEFAULT_FAQS;
 
-  const publicBrand: PublicBrand = brand
-    ? {
-        titleBeforeHighlight: brand.titleBeforeHighlight,
-        titleHighlight: brand.titleHighlight,
-        subtitle: brand.subtitle,
-        brandName: brand.brandName,
-        brandLogo:
-          brand.brandLogo && brand.brandLogo !== "/uploads/coca-cola-logo.svg"
-            ? brand.brandLogo
-            : DEFAULT_BRAND.brandLogo,
-        bottomText: brand.bottomText,
-      }
-    : DEFAULT_BRAND;
+  const publicBrands: PublicBrand[] =
+    brands.length > 0
+      ? brands.map((brand) => ({
+          id: brand.id,
+          titleBeforeHighlight: brand.titleBeforeHighlight,
+          titleHighlight: brand.titleHighlight,
+          subtitle: brand.subtitle,
+          brandName: brand.brandName,
+          brandLogo:
+            brand.brandLogo && brand.brandLogo !== "/uploads/coca-cola-logo.svg"
+              ? brand.brandLogo
+              : "/Coca-Cola_logo.svg.png",
+          bottomText: brand.bottomText,
+        }))
+      : DEFAULT_BRANDS;
+
   const homepageJsonLd = buildHomepageJsonLd({
     settings: {
       siteName: publicSettings.siteName,
@@ -468,8 +543,15 @@ export default async function HomePage() {
         whatsappNumber={publicSettings.whatsappNumber}
         defaultWhatsappMessage={publicSettings.defaultWhatsappMessage}
         menuUrl={publicSettings.menuUrl}
+        bookingLabel={publicSettings.headerBookingLabel}
+        bookingUrl={publicSettings.headerBookingUrl}
+        bookingVisible={publicSettings.headerBookingVisible}
+        eventMiceLabel={publicSettings.eventMiceLabel}
+        eventMiceUrl={publicSettings.eventMiceUrl}
+        eventMiceVisible={publicSettings.eventMiceVisible}
       />
       <MatchSection
+        title={publicSettings.matchSectionTitle}
         matches={publicMatches}
         whatsappNumber={publicSettings.whatsappNumber}
         defaultMessage={publicSettings.defaultWhatsappMessage}
@@ -486,7 +568,7 @@ export default async function HomePage() {
       />
       <LocationSection location={publicLocation} />
       <FAQSection faqs={publicFaqs} />
-      <BrandSection brand={publicBrand} />
+      <BrandSection brands={publicBrands} />
       <Footer copyright={publicSettings.footerCopyright} />
     </main>
   );
@@ -494,32 +576,78 @@ export default async function HomePage() {
 
 async function getHomepageContent(): Promise<HomepageContent> {
   try {
-    return await Promise.all([
+    const today = getJakartaStartOfToday();
+    const result = await Promise.all([
       prisma.siteSetting.findFirst({ orderBy: { createdAt: "asc" } }),
       prisma.heroSection.findMany({
         where: { isActive: true },
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       }),
       prisma.matchCard.findMany({
-        where: { isActive: true },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        where: {
+          isActive: true,
+          OR: [{ scheduledAt: null }, { scheduledAt: { gte: today } }],
+        },
+        orderBy: [
+          { scheduledAt: "asc" },
+          { sortOrder: "asc" },
+          { createdAt: "desc" },
+        ],
       }),
       prisma.eventBanner.findMany({
-        where: { isActive: true },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        where: {
+          isActive: true,
+          OR: [{ scheduledAt: null }, { scheduledAt: { gte: today } }],
+        },
+        orderBy: [
+          { scheduledAt: "asc" },
+          { sortOrder: "asc" },
+          { createdAt: "desc" },
+        ],
       }),
       prisma.locationSetting.findFirst({ orderBy: { createdAt: "asc" } }),
       prisma.fAQItem.findMany({
         where: { isActive: true },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       }),
-      prisma.brandSection.findFirst({
+      prisma.brandSection.findMany({
         where: { isActive: true },
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       }),
     ]);
+
+    const [settings, heroes, matches, events, location, faqs, brands] =
+      result;
+
+    return [
+      settings,
+      heroes,
+      sortScheduledItems(
+        matches.filter((match) => isUpcomingOrUndated(match.scheduledAt)),
+      ),
+      sortScheduledItems(
+        events.filter((event) => isUpcomingOrUndated(event.scheduledAt)),
+      ),
+      location,
+      faqs,
+      brands,
+    ];
   } catch {
     console.warn("Unable to load public CMS content. Rendering fallback data.");
-    return [null, [], [], [], null, [], null];
+    return [null, [], [], [], null, [], []];
   }
+}
+
+function sortScheduledItems<
+  T extends { scheduledAt: Date | null; sortOrder: number; createdAt: Date },
+>(items: T[]) {
+  return [...items].sort((first, second) => {
+    const firstTime = first.scheduledAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const secondTime = second.scheduledAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
+
+    if (firstTime !== secondTime) return firstTime - secondTime;
+    if (first.sortOrder !== second.sortOrder)
+      return first.sortOrder - second.sortOrder;
+    return second.createdAt.getTime() - first.createdAt.getTime();
+  });
 }

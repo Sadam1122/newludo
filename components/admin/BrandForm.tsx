@@ -1,16 +1,30 @@
 import type { BrandSection } from "@prisma/client";
-import { Save } from "lucide-react";
 
-import { updateBrand } from "@/server/actions/brandActions";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
+import { createBrand, updateBrand } from "@/server/actions/brandActions";
 
 type BrandFormProps = {
   brand?: BrandSection | null;
 };
 
 export function BrandForm({ brand }: BrandFormProps) {
+  const isEditing = Boolean(brand);
+
   return (
-    <form action={updateBrand} className="space-y-4">
+    <form action={isEditing ? updateBrand : createBrand} className="space-y-4">
       {brand ? <input type="hidden" name="id" value={brand.id} /> : null}
+
+      {brand?.brandLogo ? (
+        <div className="mx-auto flex min-h-28 max-w-xs items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-ludo-black px-5 py-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={brand.brandLogo}
+            alt={`${brand.brandName} logo preview`}
+            className="max-h-20 w-auto object-contain"
+          />
+        </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Field
@@ -39,9 +53,16 @@ export function BrandForm({ brand }: BrandFormProps) {
           defaultValue={brand?.bottomText ?? "EXCLUSIVE COLLABORATION"}
         />
         <Field
+          label="Sort Order"
+          name="sortOrder"
+          type="number"
+          defaultValue={String(brand?.sortOrder ?? 0)}
+        />
+        <Field
           label="Brand Logo URL"
           name="brandLogo"
           defaultValue={brand?.brandLogo ?? ""}
+          required={false}
         />
         <FileField
           label="Upload Brand Logo"
@@ -56,13 +77,17 @@ export function BrandForm({ brand }: BrandFormProps) {
         defaultChecked={brand?.isActive ?? true}
       />
 
-      <button
-        type="submit"
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-ludo-red px-4 text-sm font-black uppercase text-white transition hover:bg-red-500 sm:w-auto"
+      <ConfirmSubmitButton
+        title={isEditing ? "Save brand partner?" : "Create brand partner?"}
+        description={
+          isEditing
+            ? "This will update the selected brand partner and refresh the public sponsor carousel if it is active."
+            : "This will add a new brand partner to the CMS. If Active is enabled, it can appear on the public homepage."
+        }
+        confirmLabel={isEditing ? "Save Brand" : "Create Brand"}
       >
-        <Save className="h-4 w-4" aria-hidden="true" />
-        Save Brand
-      </button>
+        {isEditing ? "Save Brand" : "Create Brand"}
+      </ConfirmSubmitButton>
     </form>
   );
 }
@@ -71,18 +96,21 @@ function Field({
   label,
   name,
   defaultValue = "",
+  type = "text",
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
+  type?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={required}>{label}</FormFieldLabel>
       <input
         name={name}
+        type={type}
         defaultValue={defaultValue ?? ""}
         className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
       />
@@ -101,13 +129,11 @@ function FileField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/75">
-        {label}
-      </span>
+      <FormFieldLabel required={false}>{label}</FormFieldLabel>
       <input
         name={name}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,image/svg+xml"
         className="min-h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-sm text-white file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-ludo-black"
       />
       {value ? (

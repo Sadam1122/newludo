@@ -163,6 +163,22 @@ export function HeroSection({
           </div>
         </div>
 
+        {hero.backgroundImage ? (
+          <div className="pointer-events-none absolute bottom-12 right-0 hidden w-[min(31vw,380px)] overflow-hidden rounded-[26px] border border-white/12 bg-[#111111] shadow-[0_30px_90px_rgba(0,0,0,0.42)] xl:block">
+            <div className="relative aspect-[4/5] w-full">
+              <Image
+                src={hero.backgroundImage}
+                alt=""
+                fill
+                sizes="380px"
+                className="object-cover"
+                unoptimized={hero.backgroundImage.endsWith(".svg")}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(0,0,0,0.48)_100%)]" />
+            </div>
+          </div>
+        ) : null}
+
         <div className="absolute bottom-7 left-1/2 z-30 flex -translate-x-1/2 gap-2">
           {slides.map((slide, index) => (
             <button

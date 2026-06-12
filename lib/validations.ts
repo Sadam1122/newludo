@@ -19,21 +19,49 @@ export const matchStatusSchema = z.enum([
   "CURRENTLY_SHOWING",
 ]);
 
-export const matchSchema = z.object({
-  leagueName: requiredText("League name"),
-  homeTeamName: requiredText("Home team"),
-  awayTeamName: requiredText("Away team"),
-  homeTeamLogo: optionalText,
-  awayTeamLogo: optionalText,
-  matchDateLabel: requiredText("Date label"),
-  matchTimeLabel: requiredText("Time label"),
-  status: matchStatusSchema,
-  buttonLabel: requiredText("Button label"),
-  whatsappMessage: optionalText,
-  showSoldOutStamp: z.boolean(),
-  isActive: z.boolean(),
-  sortOrder: z.number().int(),
-});
+export const matchDisplayModeSchema = z.enum(["TEAM_MATCH", "GENERAL_EVENT"]);
+
+export const matchSchema = z
+  .object({
+    displayMode: matchDisplayModeSchema,
+    leagueName: requiredText("League name"),
+    title: optionalText,
+    categoryLabel: optionalText,
+    description: optionalText,
+    eventImage: optionalText,
+    homeTeamName: optionalText,
+    awayTeamName: optionalText,
+    homeTeamLogo: optionalText,
+    awayTeamLogo: optionalText,
+    matchDateLabel: requiredText("Date label"),
+    matchTimeLabel: requiredText("Time label"),
+    scheduledAt: z.date().nullable(),
+    status: matchStatusSchema,
+    buttonLabel: requiredText("Button label"),
+    whatsappMessage: optionalText,
+    showSoldOutStamp: z.boolean(),
+    isActive: z.boolean(),
+    sortOrder: z.number().int(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.displayMode !== "TEAM_MATCH") return;
+
+    if (!value.homeTeamName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["homeTeamName"],
+        message: "Home team is required for Team Match mode",
+      });
+    }
+
+    if (!value.awayTeamName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["awayTeamName"],
+        message: "Away team is required for Team Match mode",
+      });
+    }
+  });
 
 export const heroSchema = z.object({
   headlineLine1: requiredText("Headline line 1"),
@@ -45,13 +73,16 @@ export const heroSchema = z.object({
   ctaWhatsappMessage: requiredText("CTA WhatsApp message"),
   backgroundImage: optionalText,
   isActive: z.boolean(),
+  sortOrder: z.number().int(),
 });
 
 export const eventSchema = z.object({
   title: requiredText("Title"),
   artistName: requiredText("Artist name"),
+  talentLabel: requiredText("Talent label"),
   eventDateLabel: requiredText("Event date"),
   eventTimeLabel: requiredText("Event time"),
+  scheduledAt: z.date().nullable(),
   eventTypeLabel: optionalText,
   headlineLine1: requiredText("Headline line 1"),
   headlineHighlight1: requiredText("Headline highlight 1"),
@@ -90,6 +121,16 @@ export const brandSchema = z.object({
   brandLogo: optionalText,
   bottomText: requiredText("Bottom text"),
   isActive: z.boolean(),
+  sortOrder: z.number().int(),
+});
+
+export const gallerySchema = z.object({
+  title: requiredText("Title"),
+  caption: optionalText,
+  videoUrl: optionalText,
+  thumbnailUrl: optionalText,
+  isActive: z.boolean(),
+  sortOrder: z.number().int(),
 });
 
 export const siteSettingsSchema = z.object({
@@ -100,6 +141,13 @@ export const siteSettingsSchema = z.object({
     .trim()
     .regex(/^\d{8,15}$/, "WhatsApp number must use international digits only"),
   defaultWhatsappMessage: requiredText("Default WhatsApp message"),
+  matchSectionTitle: requiredText("Match section title"),
+  headerBookingLabel: requiredText("Header booking label"),
+  headerBookingUrl: optionalText,
+  headerBookingVisible: z.boolean(),
+  eventMiceLabel: requiredText("Event / MICE label"),
+  eventMiceUrl: optionalText,
+  eventMiceVisible: z.boolean(),
   instagramHandle: requiredText("Instagram handle"),
   instagramUrl: z.string().trim().url("Instagram URL must be valid"),
   tiktokHandle: requiredText("TikTok handle"),
