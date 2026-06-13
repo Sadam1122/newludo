@@ -87,6 +87,7 @@ model HeroSection {
   ctaLabel           String   @default("BOOK YOUR TABLE NOW")
   ctaWhatsappMessage String   @default("Halo LUDO, saya ingin reservasi meja.")
   backgroundImage    String?
+  portraitImage      String?  @db.Text
   isActive           Boolean  @default(true)
   sortOrder          Int      @default(0)
   createdAt          DateTime @default(now())

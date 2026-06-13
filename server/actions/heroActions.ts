@@ -30,6 +30,7 @@ async function buildHeroData(formData: FormData) {
     ctaLabel: getFormString(formData, "ctaLabel"),
     ctaWhatsappMessage: getFormString(formData, "ctaWhatsappMessage"),
     backgroundImage: getFormOptionalString(formData, "backgroundImage"),
+    portraitImage: getFormOptionalString(formData, "portraitImage"),
     isActive: getFormBoolean(formData, "isActive"),
     sortOrder: getFormNumber(formData, "sortOrder"),
   });
@@ -38,6 +39,12 @@ async function buildHeroData(formData: FormData) {
   if (file) {
     const media = await saveUploadedImage(file);
     parsed.backgroundImage = media.url;
+  }
+
+  const portraitFile = getFormFile(formData, "portraitImageFile");
+  if (portraitFile) {
+    const media = await saveUploadedImage(portraitFile);
+    parsed.portraitImage = media.url;
   }
 
   return parsed;

@@ -49,6 +49,7 @@ export type PublicHero = {
   ctaLabel: string;
   ctaWhatsappMessage: string;
   backgroundImage: string | null;
+  portraitImage: string | null;
 };
 
 export type PublicEvent = {

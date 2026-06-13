@@ -72,6 +72,7 @@ export const heroSchema = z.object({
   ctaLabel: requiredText("CTA label"),
   ctaWhatsappMessage: requiredText("CTA WhatsApp message"),
   backgroundImage: optionalText,
+  portraitImage: optionalText,
   isActive: z.boolean(),
   sortOrder: z.number().int(),
 });

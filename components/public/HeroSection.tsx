@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -22,6 +22,10 @@ export function HeroSection({
 }: HeroSectionProps) {
   const slides = useMemo(() => (heroes.length > 0 ? heroes : []), [heroes]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [modalImage, setModalImage] = useState<{
+    src: string;
+    alt: string;
+  } | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartedOnInteractive = useRef(false);
   const hero = slides[activeIndex] ?? slides[0];
@@ -78,6 +82,9 @@ export function HeroSection({
 
   if (!hero) return null;
 
+  const activePreviewImage = hero.portraitImage ?? hero.backgroundImage;
+  const activeHeroLabel = `${hero.headlineLine1} ${hero.headlineHighlight1} ${hero.headlineLine2} ${hero.headlineHighlight2}`;
+
   return (
     <section
       className="relative isolate min-h-[520px] overflow-hidden bg-[#050505] [touch-action:pan-y] md:min-h-[560px] lg:min-h-[650px]"
@@ -90,16 +97,38 @@ export function HeroSection({
       >
         {slides.map((slide, index) => (
           <div key={slide.id} className="relative h-full min-w-full">
-            {slide.backgroundImage ? (
-              <Image
-                src={slide.backgroundImage}
-                alt=""
-                fill
-                priority={index === 0}
-                sizes="100vw"
-                className="object-cover"
-                unoptimized={slide.backgroundImage.endsWith(".svg")}
-              />
+            {slide.backgroundImage || slide.portraitImage ? (
+              <>
+                {slide.portraitImage ? (
+                  <Image
+                    src={slide.portraitImage}
+                    alt=""
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className="object-cover md:hidden"
+                    unoptimized={slide.portraitImage.endsWith(".svg")}
+                  />
+                ) : null}
+                {slide.backgroundImage || slide.portraitImage ? (
+                  <Image
+                    src={slide.backgroundImage ?? slide.portraitImage ?? ""}
+                    alt=""
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className={cn(
+                      "object-cover",
+                      slide.portraitImage && "hidden md:block",
+                    )}
+                    unoptimized={Boolean(
+                      (slide.backgroundImage ?? slide.portraitImage)?.endsWith(
+                        ".svg",
+                      ),
+                    )}
+                  />
+                ) : null}
+              </>
             ) : (
               <div className="absolute inset-0 bg-[linear-gradient(112deg,#050505_0%,#111111_32%,#4a0505_68%,#000000_100%)]" />
             )}
@@ -160,23 +189,51 @@ export function HeroSection({
                 <ChevronRight className="h-5 w-5" aria-hidden="true" />
               </MobileArrow>
             </div>
+            {activePreviewImage ? (
+              <button
+                type="button"
+                onClick={() =>
+                  setModalImage({
+                    src: activePreviewImage,
+                    alt: activeHeroLabel,
+                  })
+                }
+                className="inline-flex h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-full border border-white/20 bg-black/45 px-4 text-sm font-black uppercase text-white backdrop-blur transition hover:border-[#F7C600] hover:text-[#F7C600] sm:w-auto"
+              >
+                <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                View Image
+              </button>
+            ) : null}
           </div>
         </div>
 
-        {hero.backgroundImage ? (
-          <div className="pointer-events-none absolute bottom-12 right-0 hidden w-[min(31vw,380px)] overflow-hidden rounded-[26px] border border-white/12 bg-[#111111] shadow-[0_30px_90px_rgba(0,0,0,0.42)] xl:block">
+        {activePreviewImage ? (
+          <button
+            type="button"
+            onClick={() =>
+              setModalImage({
+                src: activePreviewImage,
+                alt: activeHeroLabel,
+              })
+            }
+            className="absolute bottom-12 right-0 z-20 hidden w-[min(31vw,380px)] overflow-hidden rounded-[26px] border border-white/12 bg-[#111111] text-left shadow-[0_30px_90px_rgba(0,0,0,0.42)] transition hover:-translate-y-1 hover:border-[#F7C600]/60 xl:block"
+            aria-label="Open hero image preview"
+          >
             <div className="relative aspect-[4/5] w-full">
               <Image
-                src={hero.backgroundImage}
-                alt=""
+                src={activePreviewImage}
+                alt={activeHeroLabel}
                 fill
                 sizes="380px"
                 className="object-cover"
-                unoptimized={hero.backgroundImage.endsWith(".svg")}
+                unoptimized={activePreviewImage.endsWith(".svg")}
               />
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(0,0,0,0.48)_100%)]" />
+              <span className="absolute bottom-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur">
+                <Maximize2 className="h-4 w-4" aria-hidden="true" />
+              </span>
             </div>
-          </div>
+          </button>
         ) : null}
 
         <div className="absolute bottom-7 left-1/2 z-30 flex -translate-x-1/2 gap-2">
@@ -196,6 +253,37 @@ export function HeroSection({
           ))}
         </div>
       </div>
+      {modalImage ? (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/88 p-4 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Hero image preview"
+          onClick={() => setModalImage(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setModalImage(null)}
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/65 text-white transition hover:border-[#F7C600] hover:text-[#F7C600]"
+            aria-label="Close image preview"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <div
+            className="relative h-[min(86vh,900px)] w-[min(92vw,1200px)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              src={modalImage.src}
+              alt={modalImage.alt}
+              fill
+              sizes="92vw"
+              className="object-contain"
+              unoptimized={modalImage.src.endsWith(".svg")}
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

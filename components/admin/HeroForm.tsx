@@ -14,14 +14,22 @@ export function HeroForm({ hero }: HeroFormProps) {
   return (
     <form action={isEditing ? updateHero : createHero} className="space-y-4">
       {hero ? <input type="hidden" name="id" value={hero.id} /> : null}
-      {hero?.backgroundImage ? (
-        <div className="mx-auto max-w-sm overflow-hidden rounded border border-white/10 bg-ludo-black">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={hero.backgroundImage}
-            alt="Hero background preview"
-            className="aspect-[4/5] w-full object-cover"
-          />
+      {hero?.backgroundImage || hero?.portraitImage ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {hero.backgroundImage ? (
+            <PreviewImage
+              src={hero.backgroundImage}
+              label="Landscape / Desktop"
+              aspect="aspect-video"
+            />
+          ) : null}
+          {hero.portraitImage ? (
+            <PreviewImage
+              src={hero.portraitImage}
+              label="Portrait / Mobile"
+              aspect="aspect-[4/5]"
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -58,15 +66,26 @@ export function HeroForm({ hero }: HeroFormProps) {
           defaultValue={String(hero?.sortOrder ?? 0)}
         />
         <Field
-          label="Background Image URL"
+          label="Landscape / Desktop Image URL"
           name="backgroundImage"
           defaultValue={hero?.backgroundImage ?? ""}
           required={false}
         />
         <FileField
-          label="Upload Background Image"
+          label="Upload Landscape / Desktop Image"
           name="backgroundImageFile"
           value={hero?.backgroundImage}
+        />
+        <Field
+          label="Portrait / Mobile Image URL"
+          name="portraitImage"
+          defaultValue={hero?.portraitImage ?? ""}
+          required={false}
+        />
+        <FileField
+          label="Upload Portrait / Mobile Image"
+          name="portraitImageFile"
+          value={hero?.portraitImage}
         />
       </div>
 
@@ -112,6 +131,28 @@ export function HeroForm({ hero }: HeroFormProps) {
         {isEditing ? "Save Hero" : "Create Hero"}
       </ConfirmSubmitButton>
     </form>
+  );
+}
+
+function PreviewImage({
+  src,
+  label,
+  aspect,
+}: {
+  src: string;
+  label: string;
+  aspect: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded border border-white/10 bg-ludo-black">
+      <div className={aspect}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={label} className="h-full w-full object-cover" />
+      </div>
+      <p className="break-all px-3 py-2 text-xs font-semibold text-white/45">
+        {label}: {src}
+      </p>
+    </div>
   );
 }
 

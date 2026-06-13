@@ -117,7 +117,8 @@ const DEFAULT_HEROES: PublicHero[] = [
     subtitle: "Nonton seru, makan enak, suasana maksimal.",
     ctaLabel: "BOOK YOUR TABLE NOW",
     ctaWhatsappMessage: DEFAULT_WHATSAPP_MESSAGE,
-    backgroundImage: "/uploads/hero-sports-night.png",
+    backgroundImage: "/uploads/hero-1-ls.jpeg",
+    portraitImage: "/uploads/hero-1-pt.jpeg",
   },
   {
     id: "default-hero-2",
@@ -131,6 +132,7 @@ const DEFAULT_HEROES: PublicHero[] = [
     ctaWhatsappMessage:
       "Halo LUDO, saya ingin reservasi meja untuk nonton Pildun.",
     backgroundImage: "/uploads/hero-food-match.png",
+    portraitImage: null,
   },
 ];
 
@@ -421,6 +423,7 @@ export default async function HomePage() {
           ctaLabel: hero.ctaLabel,
           ctaWhatsappMessage: hero.ctaWhatsappMessage,
           backgroundImage: hero.backgroundImage,
+          portraitImage: hero.portraitImage,
         }))
       : DEFAULT_HEROES;
 
@@ -616,8 +619,7 @@ async function getHomepageContent(): Promise<HomepageContent> {
       }),
     ]);
 
-    const [settings, heroes, matches, events, location, faqs, brands] =
-      result;
+    const [settings, heroes, matches, events, location, faqs, brands] = result;
 
     return [
       settings,

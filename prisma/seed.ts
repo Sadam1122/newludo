@@ -7,6 +7,8 @@ const menuUrl =
   "https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r";
 const legacyHeroImage = "/uploads/bg-home.JPG";
 const legacyEventImage = "/uploads/bg-section3.JPG";
+const heroOneLandscapeImage = "/uploads/hero-1-ls.jpeg";
+const heroOnePortraitImage = "/uploads/hero-1-pt.jpeg";
 const heroSportsNightImage = "/uploads/hero-sports-night.png";
 const heroFoodMatchImage = "/uploads/hero-food-match.png";
 const eventLiveNightImage = "/uploads/event-live-night.png";
@@ -218,7 +220,8 @@ async function main() {
         subtitle: "Nonton seru, makan enak, suasana maksimal.",
         ctaLabel: "BOOK YOUR TABLE NOW",
         ctaWhatsappMessage: "Halo LUDO, saya ingin reservasi meja.",
-        backgroundImage: heroSportsNightImage,
+        backgroundImage: heroOneLandscapeImage,
+        portraitImage: heroOnePortraitImage,
         sortOrder: 1,
       },
       {
@@ -353,6 +356,8 @@ async function main() {
         in: [
           legacyHeroImage,
           legacyEventImage,
+          heroOneLandscapeImage,
+          heroOnePortraitImage,
           heroSportsNightImage,
           heroFoodMatchImage,
           eventLiveNightImage,
@@ -377,6 +382,18 @@ async function main() {
         url: legacyEventImage,
         mimeType: "image/jpeg",
         size: 806757,
+      },
+      {
+        filename: "hero-1-ls.jpeg",
+        url: heroOneLandscapeImage,
+        mimeType: "image/jpeg",
+        size: 364475,
+      },
+      {
+        filename: "hero-1-pt.jpeg",
+        url: heroOnePortraitImage,
+        mimeType: "image/jpeg",
+        size: 379276,
       },
       {
         filename: "hero-sports-night.png",
