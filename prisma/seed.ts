@@ -387,7 +387,7 @@ async function main() {
         filename: "hero-1-ls.jpeg",
         url: heroOneLandscapeImage,
         mimeType: "image/jpeg",
-        size: 364475,
+        size: 355153,
       },
       {
         filename: "hero-1-pt.jpeg",

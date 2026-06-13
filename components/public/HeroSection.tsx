@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { isInteractiveTarget } from "@/components/public/interaction";
 import type { PublicHero } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
-import { cn } from "@/lib/utils";
+import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type HeroSectionProps = {
   heroes: PublicHero[];
@@ -107,7 +107,9 @@ export function HeroSection({
                     priority={index === 0}
                     sizes="100vw"
                     className="object-cover md:hidden"
-                    unoptimized={slide.portraitImage.endsWith(".svg")}
+                    unoptimized={shouldBypassImageOptimization(
+                      slide.portraitImage,
+                    )}
                   />
                 ) : null}
                 {slide.backgroundImage || slide.portraitImage ? (
@@ -122,8 +124,8 @@ export function HeroSection({
                       slide.portraitImage && "hidden md:block",
                     )}
                     unoptimized={Boolean(
-                      (slide.backgroundImage ?? slide.portraitImage)?.endsWith(
-                        ".svg",
+                      shouldBypassImageOptimization(
+                        slide.backgroundImage ?? slide.portraitImage,
                       ),
                     )}
                   />
@@ -226,7 +228,7 @@ export function HeroSection({
                 fill
                 sizes="380px"
                 className="object-cover"
-                unoptimized={activePreviewImage.endsWith(".svg")}
+                unoptimized={shouldBypassImageOptimization(activePreviewImage)}
               />
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(0,0,0,0.48)_100%)]" />
               <span className="absolute bottom-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur">
@@ -279,7 +281,7 @@ export function HeroSection({
               fill
               sizes="92vw"
               className="object-contain"
-              unoptimized={modalImage.src.endsWith(".svg")}
+              unoptimized={shouldBypassImageOptimization(modalImage.src)}
             />
           </div>
         </div>

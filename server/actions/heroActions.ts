@@ -12,7 +12,7 @@ import {
   getFormString,
 } from "@/lib/utils";
 import { heroSchema, idSchema } from "@/lib/validations";
-import { saveUploadedImage } from "@/lib/upload";
+import { saveUploadedImage, saveUploadedImageAs } from "@/lib/upload";
 import {
   getActionErrorMessage,
   redirectWithMessage,
@@ -37,17 +37,31 @@ async function buildHeroData(formData: FormData) {
 
   const file = getFormFile(formData, "backgroundImageFile");
   if (file) {
-    const media = await saveUploadedImage(file);
+    const media = await saveHeroImage(file, "landscape");
     parsed.backgroundImage = media.url;
   }
 
   const portraitFile = getFormFile(formData, "portraitImageFile");
   if (portraitFile) {
-    const media = await saveUploadedImage(portraitFile);
+    const media = await saveHeroImage(portraitFile, "portrait");
     parsed.portraitImage = media.url;
   }
 
   return parsed;
+}
+
+async function saveHeroImage(file: File, variant: "landscape" | "portrait") {
+  const safeName = file.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  if (variant === "landscape" && safeName.includes("hero-1-ls")) {
+    return saveUploadedImageAs(file, "hero-1-ls.jpeg");
+  }
+
+  if (variant === "portrait" && safeName.includes("hero-1-pt")) {
+    return saveUploadedImageAs(file, "hero-1-pt.jpeg");
+  }
+
+  return saveUploadedImage(file);
 }
 
 export async function createHero(formData: FormData) {

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PublicMatch } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
-import { cn } from "@/lib/utils";
+import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type MatchSectionProps = {
   title: string;
@@ -383,7 +383,7 @@ function GeneralEventContent({ match }: { match: PublicMatch }) {
             fill
             sizes="180px"
             className="object-cover"
-            unoptimized={match.eventImage.endsWith(".svg")}
+            unoptimized={shouldBypassImageOptimization(match.eventImage)}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(145deg,#111111,#5A0505)] px-4 text-center">
@@ -416,6 +416,7 @@ function TeamLogo({ name, src }: { name: string; src?: string | null }) {
             width={80}
             height={80}
             className="h-full w-full object-contain p-2"
+            unoptimized={shouldBypassImageOptimization(src)}
           />
         ) : (
           <span className="font-display text-3xl text-[#F7C600]">

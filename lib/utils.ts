@@ -58,3 +58,9 @@ export function getFormFile(formData: FormData, key: string) {
 export function messageParam(message: string) {
   return encodeURIComponent(message);
 }
+
+export function shouldBypassImageOptimization(src: string | null | undefined) {
+  if (!src) return false;
+
+  return src.startsWith("/uploads/") || src.toLowerCase().endsWith(".svg");
+}

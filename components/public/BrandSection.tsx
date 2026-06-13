@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PublicBrand } from "@/components/public/types";
-import { cn } from "@/lib/utils";
+import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type BrandSectionProps = {
   brands: PublicBrand[];
@@ -122,7 +122,9 @@ export function BrandSection({ brands }: BrandSectionProps) {
                         width={220}
                         height={90}
                         className="max-h-14 w-auto object-contain sm:max-h-16"
-                        unoptimized={brand.brandLogo.endsWith(".svg")}
+                        unoptimized={shouldBypassImageOptimization(
+                          brand.brandLogo,
+                        )}
                       />
                     )
                   ) : (

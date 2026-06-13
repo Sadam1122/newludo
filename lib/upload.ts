@@ -40,6 +40,10 @@ export async function saveUploadedImage(file: File) {
   return saveUploadedFile(file, "image");
 }
 
+export async function saveUploadedImageAs(file: File, filename: string) {
+  return saveUploadedFile(file, "image", filename);
+}
+
 export async function saveUploadedVideo(file: File) {
   return saveUploadedFile(file, "video");
 }
@@ -59,7 +63,11 @@ export async function saveUploadedMedia(file: File) {
   );
 }
 
-async function saveUploadedFile(file: File, kind: "image" | "video") {
+async function saveUploadedFile(
+  file: File,
+  kind: "image" | "video",
+  forcedFilename?: string,
+) {
   const mimeType = file.type.toLowerCase();
   const extension =
     kind === "image"
@@ -98,11 +106,19 @@ async function saveUploadedFile(file: File, kind: "image" | "video") {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || kind;
-  const filename = `${Date.now()}-${randomUUID()}-${safeBaseName}.${extension}`;
+  const filename = forcedFilename
+    ? sanitizeForcedFilename(forcedFilename)
+    : `${Date.now()}-${randomUUID()}-${safeBaseName}.${extension}`;
   const diskPath = path.join(uploadDir, filename);
   const buffer = Buffer.from(await file.arrayBuffer());
 
   await writeFile(diskPath, buffer);
+
+  if (forcedFilename) {
+    await prisma.mediaFile.deleteMany({
+      where: { url: `/uploads/${filename}` },
+    });
+  }
 
   return prisma.mediaFile.create({
     data: {
@@ -112,6 +128,16 @@ async function saveUploadedFile(file: File, kind: "image" | "video") {
       size: file.size,
     },
   });
+}
+
+function sanitizeForcedFilename(filename: string) {
+  const baseName = path.basename(filename).toLowerCase();
+
+  if (!/^[a-z0-9][a-z0-9._-]*\.[a-z0-9]+$/.test(baseName)) {
+    throw new Error("Invalid upload filename.");
+  }
+
+  return baseName;
 }
 
 export async function deleteUploadedAsset(url: string | null | undefined) {

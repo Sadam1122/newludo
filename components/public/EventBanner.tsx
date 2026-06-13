@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { isInteractiveTarget } from "@/components/public/interaction";
 import type { PublicEvent } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
-import { cn } from "@/lib/utils";
+import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type EventBannerProps = {
   events: PublicEvent[];
@@ -129,7 +129,9 @@ export function EventBanner({
                     fill
                     sizes="(min-width: 1024px) 1180px, 100vw"
                     className="object-cover opacity-58"
-                    unoptimized={slide.backgroundImage.endsWith(".svg")}
+                    unoptimized={shouldBypassImageOptimization(
+                      slide.backgroundImage,
+                    )}
                   />
                 ) : (
                   <div className="absolute inset-0 bg-[linear-gradient(125deg,#0B0B0B_0%,#7A0B0B_52%,#000000_100%)]" />
@@ -176,7 +178,9 @@ export function EventBanner({
                     fill
                     sizes="(min-width: 1024px) 360px, 82vw"
                     className="object-cover"
-                    unoptimized={event.backgroundImage.endsWith(".svg")}
+                    unoptimized={shouldBypassImageOptimization(
+                      event.backgroundImage,
+                    )}
                   />
                   <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,rgba(0,0,0,0.62)_100%)]" />
                 </div>

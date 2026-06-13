@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 
 import type { PublicScheduleItem } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
-import { cn } from "@/lib/utils";
+import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type EventMiceScheduleProps = {
   items: PublicScheduleItem[];
@@ -126,7 +126,7 @@ function ScheduleCard({
             fill
             sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
             className="object-cover transition duration-500 group-hover:scale-[1.04]"
-            unoptimized={item.image.endsWith(".svg")}
+            unoptimized={shouldBypassImageOptimization(item.image)}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#111111,#5A0505)] px-6 text-center">
