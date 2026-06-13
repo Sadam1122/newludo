@@ -10,7 +10,11 @@ type LocationFormProps = {
 
 export function LocationForm({ location }: LocationFormProps) {
   return (
-    <form action={updateLocation} className="space-y-4">
+    <form
+      action={updateLocation}
+      encType="multipart/form-data"
+      className="space-y-4"
+    >
       {location ? <input type="hidden" name="id" value={location.id} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">

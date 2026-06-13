@@ -41,14 +41,18 @@ export function getFormDate(formData: FormData, key: string) {
 
 export function getFormFile(formData: FormData, key: string) {
   const value = formData.get(key);
+
   if (
-    typeof File === "undefined" ||
-    !(value instanceof File) ||
+    !value ||
+    typeof value === "string" ||
+    typeof value.size !== "number" ||
+    typeof value.arrayBuffer !== "function" ||
     value.size === 0
   ) {
     return null;
   }
-  return value;
+
+  return value as File;
 }
 
 export function messageParam(message: string) {

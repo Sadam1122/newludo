@@ -5,6 +5,7 @@ export function MediaUploader() {
   return (
     <form
       action={uploadMedia}
+      encType="multipart/form-data"
       className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5"
     >
       <label className="mb-2 block text-sm font-semibold text-white/80">

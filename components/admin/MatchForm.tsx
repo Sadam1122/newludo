@@ -24,7 +24,11 @@ export function MatchForm({ match }: MatchFormProps) {
   const isEditing = Boolean(match);
 
   return (
-    <form action={isEditing ? updateMatch : createMatch} className="space-y-4">
+    <form
+      action={isEditing ? updateMatch : createMatch}
+      encType="multipart/form-data"
+      className="space-y-4"
+    >
       {match ? <input type="hidden" name="id" value={match.id} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">

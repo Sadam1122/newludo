@@ -12,7 +12,11 @@ export function HeroForm({ hero }: HeroFormProps) {
   const isEditing = Boolean(hero);
 
   return (
-    <form action={isEditing ? updateHero : createHero} className="space-y-4">
+    <form
+      action={isEditing ? updateHero : createHero}
+      encType="multipart/form-data"
+      className="space-y-4"
+    >
       {hero ? <input type="hidden" name="id" value={hero.id} /> : null}
       {hero?.backgroundImage || hero?.portraitImage ? (
         <div className="grid gap-4 sm:grid-cols-2">

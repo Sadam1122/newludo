@@ -12,7 +12,11 @@ export function EventForm({ event }: EventFormProps) {
   const isEditing = Boolean(event);
 
   return (
-    <form action={isEditing ? updateEvent : createEvent} className="space-y-4">
+    <form
+      action={isEditing ? updateEvent : createEvent}
+      encType="multipart/form-data"
+      className="space-y-4"
+    >
       {event ? <input type="hidden" name="id" value={event.id} /> : null}
       {event?.backgroundImage ? (
         <div className="mx-auto max-w-sm overflow-hidden rounded border border-white/10 bg-ludo-black">

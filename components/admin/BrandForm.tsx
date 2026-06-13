@@ -12,7 +12,11 @@ export function BrandForm({ brand }: BrandFormProps) {
   const isEditing = Boolean(brand);
 
   return (
-    <form action={isEditing ? updateBrand : createBrand} className="space-y-4">
+    <form
+      action={isEditing ? updateBrand : createBrand}
+      encType="multipart/form-data"
+      className="space-y-4"
+    >
       {brand ? <input type="hidden" name="id" value={brand.id} /> : null}
 
       {brand?.brandLogo ? (

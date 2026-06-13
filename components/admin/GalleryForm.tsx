@@ -17,6 +17,7 @@ export function GalleryForm({ item }: GalleryFormProps) {
   return (
     <form
       action={isEditing ? updateGalleryItem : createGalleryItem}
+      encType="multipart/form-data"
       className="space-y-4"
     >
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
