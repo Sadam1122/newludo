@@ -11,6 +11,7 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Ticket,
   Trophy,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +24,7 @@ export const adminNavItems = [
   { href: "/admin/matches", label: "Matches", icon: Trophy },
   { href: "/admin/hero", label: "Hero", icon: Home },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
+  { href: "/admin/event-mice", label: "Event / MICE", icon: Ticket },
   { href: "/admin/gallery", label: "Gallery", icon: Clapperboard },
   { href: "/admin/location", label: "Location", icon: MapPin },
   { href: "/admin/faq", label: "FAQ", icon: HelpCircle },

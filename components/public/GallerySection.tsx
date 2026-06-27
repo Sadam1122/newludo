@@ -26,10 +26,10 @@ export function GallerySection({ items }: GallerySectionProps) {
           <div>
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-[#F7C600]">
               <Video className="h-4 w-4" aria-hidden="true" />
-              LUDO Moments
+              Event / MICE Gallery
             </p>
-            <h2 className="font-display mt-3 text-[clamp(3.2rem,12vw,7.4rem)] uppercase leading-[0.84] text-[#F8EDE7]">
-              OUR <span className="text-[#EF1F28]">GALLERY</span>
+            <h2 className="font-display mt-3 text-[clamp(3.2rem,12vw,7.4rem)] uppercase leading-[0.84] text-[#EF1F28]">
+              GALLERY
             </h2>
           </div>
           <p className="max-w-xl text-sm font-semibold leading-7 text-[#A3A3A3]">
