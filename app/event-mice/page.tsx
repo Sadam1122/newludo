@@ -1,20 +1,17 @@
-import type { EventBanner, MatchCard, SiteSetting, GalleryItem, EventMiceSetting } from "@prisma/client";
+import type { SiteSetting, GalleryItem, EventMiceSetting } from "@prisma/client";
 import type { Metadata } from "next";
 import { CheckCircle2, ChevronRight, MessageSquare, MonitorPlay, Users, Calendar, Music, CarFront, UsersRound, HelpCircle, Briefcase, Ticket, Megaphone, PartyPopper, HeartHandshake } from "lucide-react";
 
-import { EventMiceSchedule } from "@/components/public/EventMiceSchedule";
 import { EventMiceVenueLayout } from "@/components/public/EventMiceVenueLayout";
 import { GallerySection } from "@/components/public/GallerySection";
 import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
 import type {
   PublicGalleryItem,
-  PublicScheduleItem,
   PublicSettings,
 } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
 import { prisma } from "@/lib/prisma";
-import { getJakartaStartOfToday, isUpcomingOrUndated } from "@/lib/schedule";
 import { absoluteUrl } from "@/lib/seo";
 import {
   DEFAULT_WHATSAPP_MESSAGE,
@@ -55,43 +52,15 @@ const DEFAULT_SETTINGS: PublicSettings = {
     "\u00A9 2026 LUDO SPORTS KITCHEN & COFFEE. ALL RIGHTS RESERVED.",
 };
 
-const fallbackSchedule: PublicScheduleItem[] = [
-  {
-    id: "fallback-event-mice-1",
-    source: "event",
-    title: "Private Gathering",
-    categoryLabel: "Event / MICE",
-    dateLabel: "Available by Request",
-    timeLabel: "Flexible Schedule",
-    scheduledAt: null,
-    image: "/uploads/event-live-night.png",
-    description:
-      "Reservasi area untuk gathering, meeting, komunitas, dan special event.",
-    ctaLabel: "Reserve Event",
-    whatsappMessage:
-      "Halo LUDO, saya ingin bertanya untuk reservasi Event / MICE.",
-  },
-];
-
 type EventMiceContent = {
   settings: SiteSetting | null;
   miceSetting: EventMiceSetting | null;
-  matches: MatchCard[];
-  events: EventBanner[];
   gallery: GalleryItem[];
 };
 
 export default async function EventMicePage() {
-  const { settings, miceSetting, matches, events, gallery } = await getEventMiceContent();
+  const { settings, miceSetting, gallery } = await getEventMiceContent();
   const publicSettings = toPublicSettings(settings);
-  const scheduleItems = [
-    ...events.map(mapEventToSchedule),
-    ...matches.map(mapMatchToSchedule),
-  ]
-    .filter((item) => isUpcomingOrUndated(item.scheduledAt))
-    .sort(comparePublicSchedule);
-  const visibleSchedule =
-    scheduleItems.length > 0 ? scheduleItems : fallbackSchedule;
   
   const publicGallery: PublicGalleryItem[] = gallery.map((item) => ({
     id: item.id,
@@ -326,12 +295,6 @@ export default async function EventMicePage() {
         </div>
       </section>
 
-      <EventMiceSchedule
-        items={visibleSchedule}
-        whatsappNumber={publicSettings.whatsappNumber}
-        defaultMessage={publicSettings.defaultWhatsappMessage}
-      />
-
       {/* Venue Map */}
       <div id="layout">
         <EventMiceVenueLayout />
@@ -366,40 +329,16 @@ function EventCard({ title, desc, icon, className = "" }: { title: string, desc:
 
 
 async function getEventMiceContent(): Promise<EventMiceContent> {
-  const today = getJakartaStartOfToday();
-
-  const [settings, miceSetting, matches, events, gallery] = await Promise.all([
+  const [settings, miceSetting, gallery] = await Promise.all([
     prisma.siteSetting.findFirst({ orderBy: { createdAt: "asc" } }),
     prisma.eventMiceSetting.findFirst(),
-    prisma.matchCard.findMany({
-      where: {
-        isActive: true,
-        OR: [{ scheduledAt: null }, { scheduledAt: { gte: today } }],
-      },
-      orderBy: [
-        { scheduledAt: "asc" },
-        { sortOrder: "asc" },
-        { createdAt: "desc" },
-      ],
-    }),
-    prisma.eventBanner.findMany({
-      where: {
-        isActive: true,
-        OR: [{ scheduledAt: null }, { scheduledAt: { gte: today } }],
-      },
-      orderBy: [
-        { scheduledAt: "asc" },
-        { sortOrder: "asc" },
-        { createdAt: "desc" },
-      ],
-    }),
     prisma.galleryItem.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
   ]);
 
-  return { settings, miceSetting, matches, events, gallery };
+  return { settings, miceSetting, gallery };
 }
 
 function toPublicSettings(settings: SiteSetting | null): PublicSettings {
@@ -432,88 +371,3 @@ function toPublicSettings(settings: SiteSetting | null): PublicSettings {
       settings?.footerCopyright ?? DEFAULT_SETTINGS.footerCopyright,
   };
 }
-
-function mapEventToSchedule(event: EventBanner): PublicScheduleItem {
-  return {
-    id: `event-${event.id}`,
-    source: "event",
-    title: event.artistName,
-    categoryLabel: event.eventTypeLabel ?? event.title,
-    dateLabel: event.eventDateLabel,
-    timeLabel: event.eventTimeLabel,
-    scheduledAt: event.scheduledAt?.toISOString() ?? null,
-    image: event.backgroundImage,
-    description: `${event.title} - ${event.talentLabel}: ${event.artistName}`,
-    ctaLabel: event.ctaLabel,
-    whatsappMessage: event.whatsappMessage,
-  };
-}
-
-function mapMatchToSchedule(match: MatchCard): PublicScheduleItem {
-  const isGeneral = match.displayMode === "GENERAL_EVENT";
-  const title = isGeneral
-    ? match.title || match.leagueName
-    : `${match.homeTeamName ?? "Home"} vs ${match.awayTeamName ?? "Away"}`;
-
-  return {
-    id: `match-${match.id}`,
-    source: "match",
-    title,
-    categoryLabel: match.categoryLabel ?? match.leagueName,
-    dateLabel: match.matchDateLabel,
-    timeLabel: match.matchTimeLabel,
-    scheduledAt: match.scheduledAt?.toISOString() ?? null,
-    image: isGeneral
-      ? match.eventImage
-      : match.homeTeamLogo || match.awayTeamLogo,
-    description: isGeneral
-      ? match.description
-      : `${match.leagueName} live screening at LUDO.`,
-    ctaLabel: match.buttonLabel,
-    whatsappMessage: match.whatsappMessage,
-    status: match.status,
-  };
-}
-
-function comparePublicSchedule(
-  first: PublicScheduleItem,
-  second: PublicScheduleItem,
-) {
-  const firstTime = first.scheduledAt
-    ? new Date(first.scheduledAt).getTime()
-    : Number.MAX_SAFE_INTEGER;
-  const secondTime = second.scheduledAt
-    ? new Date(second.scheduledAt).getTime()
-    : Number.MAX_SAFE_INTEGER;
-
-  if (firstTime !== secondTime) return firstTime - secondTime;
-  return first.title.localeCompare(second.title);
-}
-
-function countThisWeek(items: PublicScheduleItem[]) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const end = new Date(today);
-  end.setDate(today.getDate() + ((7 - today.getDay()) % 7));
-  end.setHours(23, 59, 59, 999);
-
-  return items.filter((item) => {
-    if (!item.scheduledAt) return false;
-    const date = new Date(item.scheduledAt);
-    return date >= today && date <= end;
-  }).length;
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-[#0B0B0B] px-4 py-5 text-center">
-      <p className="font-display text-5xl leading-none text-[#F7C600]">
-        {value}
-      </p>
-      <p className="mt-2 text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#A3A3A3]">
-        {label}
-      </p>
-    </div>
-  );
-}
-
