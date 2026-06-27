@@ -1,9 +1,14 @@
+"use client";
+
 import Image from "next/image";
-import { Users, MonitorPlay, ConciergeBell, Music, Maximize, Armchair } from "lucide-react";
+import { useState } from "react";
+import { Users, MonitorPlay, ConciergeBell, Music, Maximize, Armchair, X } from "lucide-react";
 
 export function EventMiceVenueLayout() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   return (
-    <section className="relative isolate overflow-hidden bg-[#050505] py-12 sm:py-20" id="layout">
+    <>
+      <section className="relative isolate overflow-hidden bg-[#050505] py-12 sm:py-20" id="layout">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_28%,rgba(247,198,0,0.1),transparent_26%),radial-gradient(circle_at_88%_18%,rgba(239,31,40,0.16),transparent_28%)]" />
       
       <div className="ludo-section-shell relative z-10 flex flex-col gap-8 xl:flex-row xl:items-stretch">
@@ -55,16 +60,24 @@ export function EventMiceVenueLayout() {
         </div>
 
         {/* MIDDLE: VENUE MAP IMAGE */}
-        <div className="flex-grow w-full relative overflow-hidden rounded-[26px] border border-white/10 bg-[#0B0B0B] p-2 sm:p-4 shadow-[0_28px_100px_rgba(0,0,0,0.36)] min-h-[400px] xl:min-h-[600px]">
-          <div className="relative w-full h-full min-h-[400px] xl:min-h-[600px] rounded-[18px] bg-black overflow-hidden">
+        <div className="flex-grow w-full relative overflow-hidden rounded-[26px] border border-white/10 bg-[#0B0B0B] p-2 sm:p-4 shadow-[0_28px_100px_rgba(0,0,0,0.36)] flex items-center justify-center group cursor-pointer" onClick={() => setIsModalOpen(true)}>
+          <div className="relative w-full rounded-[18px] overflow-hidden flex items-center justify-center">
             <Image
               src="/layout-seat.png"
               alt="LUDO venue map"
-              fill
+              width={1200}
+              height={1200}
               sizes="(min-width: 1280px) 50vw, 100vw"
-              className="object-contain"
+              className="w-full h-auto object-contain transition duration-500 group-hover:scale-[1.02]"
               priority={false}
             />
+            <button
+              type="button"
+              className="absolute bottom-4 right-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur transition group-hover:border-[#F7C600] group-hover:text-[#F7C600] group-hover:bg-black/80"
+              aria-label="View map fullscreen"
+            >
+              <Maximize size={20} />
+            </button>
           </div>
         </div>
 
@@ -179,6 +192,38 @@ export function EventMiceVenueLayout() {
       </div>
 
     </section>
+
+      {/* ZOOM MODAL */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/65 text-white transition hover:border-[#EF1F28] hover:text-[#EF1F28]"
+            aria-label="Close image preview"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <div
+            className="relative h-[min(90vh,1000px)] w-[min(96vw,1400px)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              src="/layout-seat.png"
+              alt="LUDO venue map full"
+              fill
+              sizes="96vw"
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
-
