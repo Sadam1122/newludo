@@ -63,7 +63,7 @@ export function EventMiceVenueLayout() {
         <div className="flex-grow w-full relative overflow-hidden rounded-[26px] border border-white/10 bg-[#0B0B0B] p-2 sm:p-4 shadow-[0_28px_100px_rgba(0,0,0,0.36)] flex items-center justify-center group cursor-pointer" onClick={() => setIsModalOpen(true)}>
           <div className="relative w-full rounded-[18px] overflow-hidden flex items-center justify-center">
             <Image
-              src="/layout-seat.png"
+              src="/layout-seat-v2.png"
               alt="LUDO venue map"
               width={1200}
               height={1200}
@@ -214,7 +214,7 @@ export function EventMiceVenueLayout() {
             onClick={(event) => event.stopPropagation()}
           >
             <Image
-              src="/layout-seat.png"
+              src="/layout-seat-v2.png"
               alt="LUDO venue map full"
               fill
               sizes="96vw"
