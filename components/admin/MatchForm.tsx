@@ -116,6 +116,13 @@ export function MatchForm({
           defaultValue={match?.buttonLabel ?? "BOOK"}
         />
         <Field
+          label="Sub Text Title"
+          name="subTextTitle"
+          defaultValue={match?.subTextTitle ?? ""}
+          required={false}
+          placeholder="e.g. SPECIAL EVENT"
+        />
+        <Field
           label="Sort Order"
           name="sortOrder"
           type="number"

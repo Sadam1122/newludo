@@ -38,6 +38,7 @@ async function buildMatchData(formData: FormData) {
     scheduledAt: getFormDate(formData, "scheduledAt"),
     status: getFormString(formData, "status"),
     buttonLabel: getFormString(formData, "buttonLabel"),
+    subTextTitle: getFormOptionalString(formData, "subTextTitle"),
     whatsappMessage: getFormOptionalString(formData, "whatsappMessage"),
     showSoldOutStamp: getFormBoolean(formData, "showSoldOutStamp"),
     isActive: getFormBoolean(formData, "isActive"),

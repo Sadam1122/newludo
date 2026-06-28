@@ -59,6 +59,7 @@ model MatchCard {
   buttonLabel      String
   whatsappMessage  String?
   showSoldOutStamp Boolean          @default(false)
+  subTextTitle     String?
   isActive         Boolean          @default(true)
   sortOrder        Int              @default(0)
   createdAt        DateTime         @default(now())

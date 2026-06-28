@@ -312,9 +312,11 @@ function MatchCard({
       )}
 
       <div className="mt-6 rounded-2xl border border-[#2A2A2A] bg-[#111111] px-3 py-3 text-center sm:mt-7 sm:px-4">
-        <p className="text-xs font-bold uppercase text-[#A3A3A3]">
-          {statusCopy[match.status]}
-        </p>
+        {match.subTextTitle ? (
+          <p className="text-xs font-bold uppercase text-[#A3A3A3]">
+            {match.subTextTitle}
+          </p>
+        ) : null}
         <p className="font-display mt-1 text-3xl leading-none text-[#F8EDE7] sm:text-4xl">
           {match.matchDateLabel}{" "}
           <span className="text-[#F7C600]">{match.matchTimeLabel}</span>

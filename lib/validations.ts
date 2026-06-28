@@ -38,6 +38,7 @@ export const matchSchema = z
     scheduledAt: z.date().nullable(),
     status: matchStatusSchema,
     buttonLabel: requiredText("Button label"),
+    subTextTitle: optionalText,
     whatsappMessage: optionalText,
     showSoldOutStamp: z.boolean(),
     isActive: z.boolean(),

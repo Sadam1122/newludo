@@ -35,6 +35,7 @@ export type PublicMatch = {
   scheduledAt: string | null;
   status: "BOOK" | "LIMITED" | "FULL_BOOKED" | "CURRENTLY_SHOWING";
   buttonLabel: string;
+  subTextTitle: string | null;
   whatsappMessage: string | null;
   showSoldOutStamp: boolean;
 };
