@@ -24,20 +24,22 @@ export default async function MatchesPage({ searchParams }: PageProps) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  const nextSortOrder =
+    matches.length > 0 ? Math.max(...matches.map((m) => m.sortOrder)) + 1 : 0;
+
   return (
     <div>
       <AdminNotice success={params?.success} error={params?.error} />
       <div className="mb-8">
         <p className="text-sm font-black uppercase text-ludo-gold">CMS</p>
-        <h1 className="mt-2 text-3xl font-black text-white">Matches</h1>
+        <h1 className="mt-2 text-3xl font-black text-white">Upcoming Matches</h1>
         <p className="mt-2 text-sm font-semibold text-white/50">
-          Public matches are visible on the homepage carousel. Hidden matches
-          stay saved in CMS.
+          Active matches are displayed in the UPCOMING MATCHES section.
         </p>
       </div>
 
       <AdminCard title="Create Match">
-        <MatchForm />
+        <MatchForm nextSortOrder={nextSortOrder} />
       </AdminCard>
 
       <section className="mt-8">

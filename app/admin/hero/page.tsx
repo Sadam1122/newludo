@@ -24,6 +24,9 @@ export default async function HeroPage({ searchParams }: PageProps) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  const nextSortOrder =
+    heroes.length > 0 ? Math.max(...heroes.map((h) => h.sortOrder)) + 1 : 0;
+
   return (
     <div>
       <AdminNotice success={params?.success} error={params?.error} />
@@ -36,7 +39,7 @@ export default async function HeroPage({ searchParams }: PageProps) {
       </div>
 
       <AdminCard title="Create Hero Slide">
-        <HeroForm />
+        <HeroForm nextSortOrder={nextSortOrder} />
       </AdminCard>
 
       <section className="mt-8">

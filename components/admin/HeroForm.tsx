@@ -4,11 +4,13 @@ import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { createHero, updateHero } from "@/server/actions/heroActions";
 
-type HeroFormProps = {
+export function HeroForm({
+  hero,
+  nextSortOrder,
+}: {
   hero?: HeroSection | null;
-};
-
-export function HeroForm({ hero }: HeroFormProps) {
+  nextSortOrder?: number;
+}) {
   const isEditing = Boolean(hero);
 
   return (
@@ -67,7 +69,7 @@ export function HeroForm({ hero }: HeroFormProps) {
           label="Sort Order"
           name="sortOrder"
           type="number"
-          defaultValue={String(hero?.sortOrder ?? 0)}
+          defaultValue={String(hero?.sortOrder ?? nextSortOrder ?? 0)}
         />
         <Field
           label="Landscape / Desktop Image URL"

@@ -7,11 +7,13 @@ import {
   updateGalleryItem,
 } from "@/server/actions/galleryActions";
 
-type GalleryFormProps = {
+export function GalleryForm({
+  item,
+  nextSortOrder,
+}: {
   item?: GalleryItem | null;
-};
-
-export function GalleryForm({ item }: GalleryFormProps) {
+  nextSortOrder?: number;
+}) {
   const isEditing = Boolean(item);
 
   return (
@@ -25,7 +27,7 @@ export function GalleryForm({ item }: GalleryFormProps) {
       {item?.videoUrl ? (
         <div className="mx-auto max-w-sm overflow-hidden rounded-xl border border-white/10 bg-ludo-black">
           <video
-            src={item.videoUrl}
+            src={`${item.videoUrl}#t=0.001`}
             controls
             muted
             playsInline
@@ -42,7 +44,7 @@ export function GalleryForm({ item }: GalleryFormProps) {
           label="Sort Order"
           name="sortOrder"
           type="number"
-          defaultValue={String(item?.sortOrder ?? 0)}
+          defaultValue={String(item?.sortOrder ?? nextSortOrder ?? 0)}
         />
         <Field
           label="Video URL"

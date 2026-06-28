@@ -24,6 +24,9 @@ export default async function BrandsPage({ searchParams }: PageProps) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  const nextSortOrder =
+    brands.length > 0 ? Math.max(...brands.map((b) => b.sortOrder)) + 1 : 0;
+
   return (
     <div>
       <AdminNotice success={params?.success} error={params?.error} />
@@ -31,13 +34,12 @@ export default async function BrandsPage({ searchParams }: PageProps) {
         <p className="text-sm font-black uppercase text-ludo-gold">CMS</p>
         <h1 className="mt-2 text-3xl font-black text-white">Brand Partners</h1>
         <p className="mt-2 text-sm font-semibold text-white/50">
-          Active partners appear in the public sponsor carousel. The first
-          active item controls the section heading.
+          Active brands rotate in the infinite marquee on the homepage.
         </p>
       </div>
 
-      <AdminCard title="Create Brand Partner">
-        <BrandForm />
+      <AdminCard title="Add Brand Partner">
+        <BrandForm nextSortOrder={nextSortOrder} />
       </AdminCard>
 
       <section className="mt-8">

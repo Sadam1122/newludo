@@ -4,11 +4,13 @@ import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { createEvent, updateEvent } from "@/server/actions/eventActions";
 
-type EventFormProps = {
+export function EventForm({
+  event,
+  nextSortOrder,
+}: {
   event?: EventBanner;
-};
-
-export function EventForm({ event }: EventFormProps) {
+  nextSortOrder?: number;
+}) {
   const isEditing = Boolean(event);
 
   return (
@@ -77,7 +79,7 @@ export function EventForm({ event }: EventFormProps) {
           label="Sort Order"
           name="sortOrder"
           type="number"
-          defaultValue={String(event?.sortOrder ?? 0)}
+          defaultValue={String(event?.sortOrder ?? nextSortOrder ?? 0)}
         />
         <Field
           label="Background Image URL"

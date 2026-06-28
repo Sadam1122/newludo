@@ -31,9 +31,13 @@ export default async function GalleryPage({ searchParams }: PageProps) {
     prisma.mediaFile.findMany({
       where: { mimeType: { startsWith: "video/" } },
       orderBy: { createdAt: "desc" },
-      take: 12,
     }),
   ]);
+
+  const nextSortOrder =
+    galleryItems.length > 0
+      ? Math.max(...galleryItems.map((g) => g.sortOrder)) + 1
+      : 0;
 
   return (
     <div>
@@ -46,8 +50,8 @@ export default async function GalleryPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      <AdminCard title="Create Gallery Video">
-        <GalleryForm />
+      <AdminCard title="Add Gallery Video">
+        <GalleryForm nextSortOrder={nextSortOrder} />
       </AdminCard>
 
       {uploadedVideos.length > 0 ? (
@@ -57,34 +61,36 @@ export default async function GalleryPage({ searchParams }: PageProps) {
               Uploaded Video Files
             </h2>
             <p className="text-xs font-bold uppercase text-white/45">
-              Copy URL into Gallery form
+              Copy URL into Gallery form ({uploadedVideos.length} files)
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {uploadedVideos.map((media) => (
-              <article
-                key={media.id}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-ludo-black"
-              >
-                <video
-                  src={media.url}
-                  controls
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="aspect-video w-full bg-black object-cover"
-                />
-                <div className="space-y-3 p-4">
-                  <p className="truncate text-sm font-black text-white">
-                    {media.filename}
-                  </p>
-                  <p className="break-all rounded-xl bg-white/[0.04] px-3 py-2 text-xs text-white/60">
-                    {media.url}
-                  </p>
-                  <CopyButton value={media.url} />
-                </div>
-              </article>
-            ))}
+          <div className="max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {uploadedVideos.map((media) => (
+                <article
+                  key={media.id}
+                  className="overflow-hidden rounded-2xl border border-white/10 bg-ludo-black flex flex-col"
+                >
+                  <video
+                    src={`${media.url}#t=0.001`}
+                    controls
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="aspect-video w-full bg-black object-cover"
+                  />
+                  <div className="flex flex-col flex-grow space-y-3 p-4">
+                    <p className="truncate text-sm font-black text-white">
+                      {media.filename}
+                    </p>
+                    <p className="break-all rounded-xl bg-white/[0.04] px-3 py-2 text-xs text-white/60 flex-grow">
+                      {media.url}
+                    </p>
+                    <CopyButton value={media.url} />
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       ) : null}
@@ -141,7 +147,7 @@ export default async function GalleryPage({ searchParams }: PageProps) {
                 <td className="px-4 py-4">
                   <div className="w-32 overflow-hidden rounded-lg border border-white/10 bg-black">
                     <video
-                      src={item.videoUrl}
+                      src={`${item.videoUrl}#t=0.001`}
                       muted
                       playsInline
                       preload="metadata"

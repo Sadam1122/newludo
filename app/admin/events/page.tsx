@@ -24,19 +24,22 @@ export default async function EventsPage({ searchParams }: PageProps) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  const nextSortOrder =
+    events.length > 0 ? Math.max(...events.map((e) => e.sortOrder)) + 1 : 0;
+
   return (
     <div>
       <AdminNotice success={params?.success} error={params?.error} />
       <div className="mb-8">
         <p className="text-sm font-black uppercase text-ludo-gold">CMS</p>
-        <h1 className="mt-2 text-3xl font-black text-white">Events</h1>
+        <h1 className="mt-2 text-3xl font-black text-white">Event Banners</h1>
         <p className="mt-2 text-sm font-semibold text-white/50">
-          Active events rotate in the public event carousel.
+          Active banners appear in UPCOMING EVENTS on the public homepage.
         </p>
       </div>
 
-      <AdminCard title="Create Event">
-        <EventForm />
+      <AdminCard title="Create Event Banner">
+        <EventForm nextSortOrder={nextSortOrder} />
       </AdminCard>
 
       <section className="mt-8">

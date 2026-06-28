@@ -4,11 +4,13 @@ import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { createBrand, updateBrand } from "@/server/actions/brandActions";
 
-type BrandFormProps = {
+export function BrandForm({
+  brand,
+  nextSortOrder,
+}: {
   brand?: BrandSection | null;
-};
-
-export function BrandForm({ brand }: BrandFormProps) {
+  nextSortOrder?: number;
+}) {
   const isEditing = Boolean(brand);
 
   return (
@@ -60,7 +62,7 @@ export function BrandForm({ brand }: BrandFormProps) {
           label="Sort Order"
           name="sortOrder"
           type="number"
-          defaultValue={String(brand?.sortOrder ?? 0)}
+          defaultValue={String(brand?.sortOrder ?? nextSortOrder ?? 0)}
         />
         <Field
           label="Brand Logo URL"

@@ -16,11 +16,13 @@ const displayModes = [
   { value: "GENERAL_EVENT", label: "General Event / Broadcast" },
 ] as const;
 
-type MatchFormProps = {
+export function MatchForm({
+  match,
+  nextSortOrder,
+}: {
   match?: MatchCard;
-};
-
-export function MatchForm({ match }: MatchFormProps) {
+  nextSortOrder?: number;
+}) {
   const isEditing = Boolean(match);
 
   return (
@@ -117,7 +119,7 @@ export function MatchForm({ match }: MatchFormProps) {
           label="Sort Order"
           name="sortOrder"
           type="number"
-          defaultValue={String(match?.sortOrder ?? 0)}
+          defaultValue={String(match?.sortOrder ?? nextSortOrder ?? 0)}
         />
         <Field
           label="Home Logo URL"
