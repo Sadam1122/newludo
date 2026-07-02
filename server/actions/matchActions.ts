@@ -14,12 +14,53 @@ import {
 } from "@/lib/utils";
 import { idSchema, matchSchema } from "@/lib/validations";
 import { saveUploadedImage } from "@/lib/upload";
+import { buildLudoTableLayout } from "@/lib/tableLayout";
+import type { MatchCard } from "@prisma/client";
 import {
   getActionErrorMessage,
   redirectWithMessage,
 } from "@/server/actions/actionUtils";
 
 const adminPath = "/admin/matches";
+
+async function provisionBookingEventForMatch(match: MatchCard) {
+  const title =
+    match.displayMode === "GENERAL_EVENT"
+      ? match.title ?? match.leagueName
+      : `${match.homeTeamName ?? "Home"} vs ${match.awayTeamName ?? "Away"}`;
+
+  const bookingEvent = await prisma.bookingEvent.create({
+    data: {
+      category: "BOOKING_EVENT",
+      title,
+      eventType: "REGULER_MATCH",
+      eventDateLabel: match.matchDateLabel,
+      eventTimeLabel: match.matchTimeLabel,
+      scheduledAt: match.scheduledAt,
+      backgroundImage: match.eventImage,
+      ctaLabel: match.buttonLabel || "BOOK NOW",
+      isActive: true,
+    },
+  });
+
+  const layout = buildLudoTableLayout();
+  await prisma.eventTable.createMany({
+    data: layout.map((t) => ({
+      bookingEventId: bookingEvent.id,
+      tableCode: t.tableCode,
+      capacity: t.capacity,
+      tableType: t.tableType,
+      status: "AVAILABLE",
+    })),
+  });
+
+  await prisma.matchCard.update({
+    where: { id: match.id },
+    data: { bookingEventId: bookingEvent.id },
+  });
+
+  return bookingEvent.id;
+}
 
 async function buildMatchData(formData: FormData) {
   const parsed = matchSchema.parse({
@@ -72,7 +113,10 @@ export async function createMatch(formData: FormData) {
 
   try {
     const data = await buildMatchData(formData);
-    await prisma.matchCard.create({ data });
+    const match = await prisma.matchCard.create({ data });
+    // Every match automatically gets its own bookable event (tables + payment flow)
+    // so the public "BOOK" button never falls back to "Coming Soon".
+    await provisionBookingEventForMatch(match);
     revalidatePath("/");
     revalidatePath(adminPath);
   } catch (error) {
@@ -88,7 +132,13 @@ export async function updateMatch(formData: FormData) {
   try {
     const id = idSchema.parse(getFormString(formData, "id"));
     const data = await buildMatchData(formData);
-    await prisma.matchCard.update({ where: { id }, data });
+    const match = await prisma.matchCard.update({ where: { id }, data });
+
+    if (!match.bookingEventId) {
+      // Self-heal legacy matches that predate auto-provisioning.
+      await provisionBookingEventForMatch(match);
+    }
+
     revalidatePath("/");
     revalidatePath(adminPath);
   } catch (error) {

@@ -240,10 +240,10 @@ async function main() {
     ],
   });
 
-  await prisma.eventBanner.deleteMany();
-  await prisma.eventBanner.createMany({
+  await prisma.bookingEvent.createMany({
     data: [
       {
+        category: "LIVE_EVENT",
         title: "Live Performance",
         artistName: "AGNES MONICA",
         talentLabel: "Guest Star",
@@ -262,6 +262,7 @@ async function main() {
         sortOrder: 1,
       },
       {
+        category: "LIVE_EVENT",
         title: "DJ Night",
         artistName: "LUDO NIGHT",
         talentLabel: "Talent",

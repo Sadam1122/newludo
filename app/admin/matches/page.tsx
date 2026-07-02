@@ -6,6 +6,7 @@ import { AdminNotice } from "@/components/admin/AdminNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 import { MatchForm } from "@/components/admin/MatchForm";
+import { computeAvailability } from "@/lib/bookingAvailability";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ export default async function MatchesPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const matches = await prisma.matchCard.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    include: { bookingEvent: { include: { tables: true } } },
   });
 
   const nextSortOrder =
@@ -121,14 +123,33 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                   ) : null}
                 </td>
                 <td className="px-4 py-4">
-                  <span
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-xs font-black",
-                      getMatchStatusClass(match.status),
-                    )}
-                  >
-                    {match.status}
-                  </span>
+                  {match.bookingEvent ? (
+                    (() => {
+                      const availability = computeAvailability(match.bookingEvent!.tables);
+                      return (
+                        <>
+                          <span
+                            className={cn(
+                              "rounded-full border px-2.5 py-1 text-xs font-black",
+                              getMatchStatusClass(availability.status),
+                            )}
+                          >
+                            {availability.status}
+                          </span>
+                          <p className="mt-1 text-[10px] font-bold uppercase text-white/40">
+                            {availability.availableTables}/{availability.totalTables} tables left
+                          </p>
+                          <p className="mt-1 text-[10px] text-ludo-gold">
+                            Linked: {match.bookingEvent!.title}
+                          </p>
+                        </>
+                      );
+                    })()
+                  ) : (
+                    <span className="rounded-full border border-ludo-red/40 bg-ludo-red/10 px-2.5 py-1 text-xs font-black text-red-100">
+                      NOT LINKED
+                    </span>
+                  )}
                   {match.showSoldOutStamp ? (
                     <span className="ml-2 rounded-full bg-ludo-red px-2.5 py-1 text-xs font-black text-white">
                       SOLD OUT

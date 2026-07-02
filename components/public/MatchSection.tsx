@@ -2,17 +2,15 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PublicMatch } from "@/components/public/types";
-import { WhatsAppButton } from "@/components/public/WhatsAppButton";
 import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type MatchSectionProps = {
   title: string;
   matches: PublicMatch[];
-  whatsappNumber: string;
-  defaultMessage: string;
 };
 
 const statusCopy: Record<PublicMatch["status"], string> = {
@@ -22,26 +20,14 @@ const statusCopy: Record<PublicMatch["status"], string> = {
   CURRENTLY_SHOWING: "CURRENTLY SHOWING",
 };
 
-type ScheduleFilter = "now" | "week" | "upcoming";
-
-const scheduleFilters: Array<{ key: ScheduleFilter; label: string }> = [
-  { key: "now", label: "Sedang Berlangsung" },
-  { key: "week", label: "Minggu Ini" },
-  { key: "upcoming", label: "Akan Datang" },
-];
-
 export function MatchSection({
   title,
   matches,
-  whatsappNumber,
-  defaultMessage,
 }: MatchSectionProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [activeFilter, setActiveFilter] = useState<ScheduleFilter>("upcoming");
   const [cardsPerPage, setCardsPerPage] = useState(getCardsPerPage);
-  const groupedMatches = useMemo(() => buildMatchGroups(matches), [matches]);
-  const visibleMatches = groupedMatches[activeFilter];
+  const visibleMatches = useMemo(() => buildVisibleMatches(matches), [matches]);
   const pageCount = Math.max(
     1,
     Math.ceil(visibleMatches.length / cardsPerPage),
@@ -148,12 +134,6 @@ export function MatchSection({
     });
   }
 
-  function changeFilter(filter: ScheduleFilter) {
-    setActiveFilter(filter);
-    setActiveIndex(0);
-    window.requestAnimationFrame(() => scrollToCard(0));
-  }
-
   return (
     <section
       id="menu"
@@ -165,35 +145,9 @@ export function MatchSection({
           <h2 className="font-display ludo-text-shadow max-w-[75%] text-[clamp(3rem,13vw,6.7rem)] uppercase leading-[0.84] text-[#F8EDE7] sm:max-w-none sm:text-[clamp(3.6rem,8vw,6.7rem)]">
             {title}
           </h2>
-          {matches.length > 0 ? (
-            <div className="mt-5 grid max-w-3xl grid-cols-3 gap-2 rounded-[18px] border border-white/10 bg-black/24 p-2">
-              {scheduleFilters.map((filter) => {
-                const count = groupedMatches[filter.key].length;
-
-                return (
-                  <button
-                    key={filter.key}
-                    type="button"
-                    onClick={() => changeFilter(filter.key)}
-                    className={cn(
-                      "min-h-11 rounded-xl px-2 text-center text-[0.58rem] font-black uppercase leading-tight transition sm:px-4 sm:text-xs",
-                      activeFilter === filter.key
-                        ? "bg-[#F7C600] text-[#050505]"
-                        : "text-white/62 hover:bg-white/[0.07] hover:text-white",
-                    )}
-                  >
-                    {filter.label}
-                    <span className="mt-1 block text-[0.62rem] opacity-70">
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
         </div>
 
-        {matches.length > 0 && visibleMatches.length > 0 ? (
+        {visibleMatches.length > 0 ? (
           <div className="relative left-1/2 z-10 w-[min(100vw-0.75rem,1440px)] -translate-x-1/2 px-6 sm:w-[min(100vw-2rem,1440px)] sm:px-10 lg:px-16 xl:w-[min(100vw-3rem,1500px)]">
             <button
               type="button"
@@ -215,11 +169,7 @@ export function MatchSection({
                   key={match.id}
                   className="min-w-full snap-start sm:min-w-[calc(50%-0.625rem)] lg:min-w-[calc(25%-1.125rem)]"
                 >
-                  <MatchCard
-                    match={match}
-                    whatsappNumber={whatsappNumber}
-                    defaultMessage={defaultMessage}
-                  />
+                  <MatchCard match={match} />
                 </div>
               ))}
             </div>
@@ -234,16 +184,6 @@ export function MatchSection({
                 aria-hidden="true"
               />
             </button>
-          </div>
-        ) : matches.length > 0 ? (
-          <div className="rounded-[24px] border border-white/10 bg-[#0B0B0B] p-8 text-center">
-            <p className="font-display text-5xl uppercase text-[#F7C600]">
-              No Schedule In This Filter
-            </p>
-            <p className="mt-2 text-sm font-semibold text-[#A3A3A3]">
-              Jadwal yang sudah lewat otomatis tidak ditampilkan. Coba tab lain
-              atau update jadwal dari Admin CMS.
-            </p>
           </div>
         ) : (
           <div className="rounded-[24px] border border-white/10 bg-[#0B0B0B] p-8 text-center">
@@ -283,18 +223,11 @@ export function MatchSection({
   );
 }
 
-function MatchCard({
-  match,
-  whatsappNumber,
-  defaultMessage,
-}: {
-  match: PublicMatch;
-  whatsappNumber: string;
-  defaultMessage: string;
-}) {
+function MatchCard({ match }: { match: PublicMatch }) {
   const isFull = match.status === "FULL_BOOKED";
   const shouldStamp = isFull || match.showSoldOutStamp;
   const isGeneral = match.displayMode === "GENERAL_EVENT";
+  const isBookable = Boolean(match.bookingEventId);
 
   return (
     <article className="group relative min-h-[366px] overflow-hidden rounded-[22px] border border-white/10 bg-[#0B0B0B] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.34)] transition duration-300 hover:-translate-y-1 hover:border-[#EF1F28]/60 sm:min-h-[386px] sm:p-5">
@@ -321,6 +254,11 @@ function MatchCard({
           {match.matchDateLabel}{" "}
           <span className="text-[#F7C600]">{match.matchTimeLabel}</span>
         </p>
+        {isBookable && match.totalTables ? (
+          <p className="mt-1 text-[0.65rem] font-bold uppercase text-[#A3A3A3]">
+            {match.availableTables}/{match.totalTables} tables left
+          </p>
+        ) : null}
       </div>
 
       <div className="relative z-20 mt-5">
@@ -328,19 +266,21 @@ function MatchCard({
           <span className="inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-full bg-[#EF1F28] px-4 text-center text-sm font-black uppercase text-white opacity-85">
             {match.buttonLabel}
           </span>
-        ) : (
-          <WhatsAppButton
-            phoneNumber={whatsappNumber}
-            message={match.whatsappMessage ?? defaultMessage}
-            variant="solid"
+        ) : isBookable ? (
+          <Link
+            href={`/book/${match.bookingEventId}`}
             className={cn(
-              "w-full",
+              "inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(90deg,#EF1F28,#F7C600)] px-4 text-center text-sm font-black uppercase text-white shadow-[0_14px_34px_rgba(239,31,40,0.24)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(247,198,0,0.3)]",
               match.status === "LIMITED" &&
-                "!bg-[#F7C600] !text-[#050505] shadow-[0_14px_34px_rgba(247,198,0,0.24)] hover:!bg-[#ffdc32] focus-visible:outline-[#F7C600]",
+                "!bg-[#F7C600] !text-[#050505] shadow-[0_14px_34px_rgba(247,198,0,0.24)] hover:!bg-[#ffdc32]",
             )}
           >
             {match.buttonLabel}
-          </WhatsAppButton>
+          </Link>
+        ) : (
+          <span className="inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-full border border-white/15 px-4 text-center text-sm font-black uppercase text-white/40">
+            Coming Soon
+          </span>
         )}
       </div>
     </article>
@@ -459,38 +399,14 @@ function getCardsPerPage() {
   return 4;
 }
 
-function buildMatchGroups(matches: PublicMatch[]) {
+function buildVisibleMatches(matches: PublicMatch[]) {
   const today = startOfToday();
-  const weekEnd = endOfThisWeek(today);
-  const validMatches = matches.filter((match) => !isExpired(match, today));
-
-  return {
-    now: validMatches.filter((match) => match.status === "CURRENTLY_SHOWING"),
-    week: validMatches.filter((match) => {
-      if (!match.scheduledAt) return false;
-      const date = new Date(match.scheduledAt);
-      return date >= today && date <= weekEnd;
-    }),
-    upcoming: validMatches.filter((match) => {
-      if (match.status === "CURRENTLY_SHOWING") return false;
-      if (!match.scheduledAt) return true;
-      return new Date(match.scheduledAt) > weekEnd;
-    }),
-  };
+  return matches.filter((match) => !isExpired(match, today));
 }
 
 function startOfToday() {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
-  return date;
-}
-
-function endOfThisWeek(today: Date) {
-  const date = new Date(today);
-  const day = date.getDay();
-  const daysUntilSunday = (7 - day) % 7;
-  date.setDate(date.getDate() + daysUntilSunday);
-  date.setHours(23, 59, 59, 999);
   return date;
 }
 

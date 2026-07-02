@@ -38,6 +38,9 @@ export type PublicMatch = {
   subTextTitle: string | null;
   whatsappMessage: string | null;
   showSoldOutStamp: boolean;
+  bookingEventId: string | null;
+  availableTables: number | null;
+  totalTables: number | null;
 };
 
 export type PublicHero = {
@@ -55,6 +58,7 @@ export type PublicHero = {
 
 export type PublicEvent = {
   id: string;
+  category: "LIVE_EVENT" | "BOOKING_EVENT";
   title: string;
   artistName: string;
   talentLabel: string;
@@ -69,6 +73,8 @@ export type PublicEvent = {
   backgroundImage: string | null;
   ctaLabel: string;
   whatsappMessage: string | null;
+  availableTables: number | null;
+  totalTables: number | null;
 };
 
 export type PublicGalleryItem = {

@@ -64,6 +64,11 @@ model MatchCard {
   sortOrder        Int              @default(0)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+
+  bookingEventId   String?
+  bookingEvent     BookingEvent?    @relation(fields: [bookingEventId], references: [id], onDelete: SetNull)
+
+  @@index([bookingEventId])
 }
 
 enum MatchStatus {
@@ -95,26 +100,9 @@ model HeroSection {
   updatedAt          DateTime @updatedAt
 }
 
-model EventBanner {
-  id                 String    @id @default(cuid())
-  title              String
-  artistName         String
-  talentLabel        String    @default("Talent")
-  eventDateLabel     String
-  eventTimeLabel     String
-  scheduledAt        DateTime?
-  eventTypeLabel     String?
-  headlineLine1      String
-  headlineHighlight1 String
-  headlineLine2      String
-  headlineHighlight2 String
-  backgroundImage    String?
-  ctaLabel           String
-  whatsappMessage    String?
-  isActive           Boolean   @default(true)
-  sortOrder          Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+enum EventCategory {
+  LIVE_EVENT
+  BOOKING_EVENT
 }
 
 model LocationSetting {
@@ -185,4 +173,176 @@ model EventMiceSetting {
   section2Description String   @db.Text
   quoteText           String
   updatedAt           DateTime @updatedAt
+}
+
+// ==========================================
+// UNIFIED EVENT & BOOKING SYSTEM
+// ==========================================
+
+model BookingEvent {
+  id                 String           @id @default(cuid())
+  category           EventCategory    @default(BOOKING_EVENT)
+  title              String
+  eventType          EventTemplate    @default(REGULER_MATCH)
+  eventTypeLabel     String?
+  artistName         String?
+  talentLabel        String?
+  eventDateLabel     String
+  eventTimeLabel     String
+  scheduledAt        DateTime?
+  description        String?          @db.Text
+  whatsappMessage    String?
+  headlineLine1      String?
+  headlineHighlight1 String?
+  headlineLine2      String?
+  headlineHighlight2 String?
+  backgroundImage    String?
+  posterImage        String?
+  openGateInfo       String?          @default("Open Gate at 21:00 WIB")
+  tableInfo          String?          @db.Text
+  ctaLabel           String           @default("BOOK NOW")
+  allowAlaCarte      Boolean          @default(false)
+  isActive           Boolean          @default(true)
+  sortOrder          Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  packages           EventPackage[]
+  tables             EventTable[]
+  reservations       Reservation[]
+  matches            MatchCard[]
+}
+
+model EventPackage {
+  id              String            @id @default(cuid())
+  bookingEventId  String
+  name            String
+  description     String?           @db.Text
+  price           Float             @default(0)
+  posterImage     String?
+  tableType       TableType
+  category        DeliveryCategory?
+  subCategory     String?
+  isActive        Boolean           @default(true)
+  sortOrder       Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  bookingEvent    BookingEvent      @relation(fields: [bookingEventId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
+
+  @@index([bookingEventId])
+}
+
+model EventTable {
+  id              String       @id @default(cuid())
+  bookingEventId  String
+  tableCode       String       // e.g. "T1", "T22-A", "Barstool-A"
+  capacity        Int          @default(1)
+  tableType       TableType
+  status          TableStatus  @default(AVAILABLE)
+  basePrice       Float        @default(0)
+  bookedSeats     Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  bookingEvent    BookingEvent @relation(fields: [bookingEventId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
+
+  @@unique([bookingEventId, tableCode])
+  @@index([bookingEventId])
+}
+
+model Reservation {
+  id                  String             @id @default(cuid())
+  bookingEventId      String
+  customerName        String
+  customerPhone       String
+  customerEmail       String
+  customerRequest     String?            @db.Text
+  status              ReservationStatus  @default(PENDING)
+  totalPrice          Float              @default(0)
+  tax                 Float              @default(0)
+  discountAmount      Float              @default(0)
+  memberUsername      String?
+  snapToken           String?
+  transactionId       String?            @unique
+  paymentMethod       String?
+  paymentCallbackData String?            @db.Text
+  expiredAt           DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  bookingEvent        BookingEvent       @relation(fields: [bookingEventId], references: [id], onDelete: Cascade)
+  orderItems          OrderItem[]
+
+  @@index([bookingEventId])
+}
+
+model OrderItem {
+  id              String        @id @default(cuid())
+  reservationId   String
+  eventPackageId  String?
+  eventTableId    String?
+  quantity        Int           @default(1)
+  price           Float         @default(0)
+  createdAt       DateTime      @default(now())
+
+  reservation     Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  eventPackage    EventPackage? @relation(fields: [eventPackageId], references: [id], onDelete: SetNull)
+  eventTable      EventTable?   @relation(fields: [eventTableId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId])
+  @@index([eventPackageId])
+  @@index([eventTableId])
+}
+
+enum EventTemplate {
+  REGULER_MATCH
+  NOBAR_COMMUNITY
+  BIG_MATCH
+  SUPER_BIG_MATCH
+  IFTAR_2027
+  DELIVERY_ORDER
+}
+
+enum TableType {
+  VVIP
+  VIP
+  REGULAR_INDOOR
+  REGULAR_SEMI_OUTDOOR
+  BARSTOOL
+  DELIVERY
+}
+
+enum DeliveryCategory {
+  BEVERAGES
+  FOOD
+}
+
+model Member {
+  id              String   @id @default(cuid())
+  username        String   @unique
+  passwordHash    String
+  discountPercent Float    @default(0)
+  benefitNote     String?  @db.Text
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum TableStatus {
+  AVAILABLE
+  SELECTED
+  BOOKED
+  PAID
+  LOCKED
+}
+
+enum ReservationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  CANCELLED
 }

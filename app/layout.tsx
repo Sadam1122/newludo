@@ -84,11 +84,23 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+import Script from "next/script";
+
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const isProd = process.env.MIDTRANS_IS_PRODUCTION === "true";
+  const snapUrl = isProd
+    ? "https://app.midtrans.com/snap/snap.js"
+    : "https://app.sandbox.midtrans.com/snap/snap.js";
+
   return (
     <html lang="id">
       <body className={`${bebasNeue.variable} ${montserrat.variable}`}>
         {children}
+        <Script
+          src={snapUrl}
+          strategy="lazyOnload"
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        />
       </body>
     </html>
   );

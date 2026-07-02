@@ -81,6 +81,7 @@ export function HeroForm({
           label="Upload Landscape / Desktop Image"
           name="backgroundImageFile"
           value={hero?.backgroundImage}
+          tooltip="Optimal resolution: 1920x1080px (16:9). Used for desktop screens."
         />
         <Field
           label="Portrait / Mobile Image URL"
@@ -92,6 +93,7 @@ export function HeroForm({
           label="Upload Portrait / Mobile Image"
           name="portraitImageFile"
           value={hero?.portraitImage}
+          tooltip="Optimal resolution: 1080x1920px (9:16). Used for mobile screens."
         />
       </div>
 
@@ -188,18 +190,25 @@ function Field({
   );
 }
 
+import { InfoTooltip } from "./InfoTooltip";
+
 function FileField({
   label,
   name,
   value,
+  tooltip,
 }: {
   label: string;
   name: string;
   value?: string | null;
+  tooltip?: string;
 }) {
   return (
     <label className="block">
-      <FormFieldLabel required={false}>{label}</FormFieldLabel>
+      <FormFieldLabel required={false}>
+        {label}
+        {tooltip && <InfoTooltip info={tooltip} />}
+      </FormFieldLabel>
       <input
         name={name}
         type="file"

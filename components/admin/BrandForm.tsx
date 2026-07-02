@@ -74,6 +74,7 @@ export function BrandForm({
           label="Upload Brand Logo"
           name="brandLogoFile"
           value={brand?.brandLogo}
+          tooltip="Optimal resolution: 300x150px (2:1) or square. PNG with transparent background recommended."
         />
       </div>
 
@@ -124,18 +125,25 @@ function Field({
   );
 }
 
+import { InfoTooltip } from "./InfoTooltip";
+
 function FileField({
   label,
   name,
   value,
+  tooltip,
 }: {
   label: string;
   name: string;
   value?: string | null;
+  tooltip?: string;
 }) {
   return (
     <label className="block">
-      <FormFieldLabel required={false}>{label}</FormFieldLabel>
+      <FormFieldLabel required={false}>
+        {label}
+        {tooltip && <InfoTooltip info={tooltip} />}
+      </FormFieldLabel>
       <input
         name={name}
         type="file"

@@ -15,8 +15,10 @@ import {
   toggleGalleryItemActive,
 } from "@/server/actions/galleryActions";
 
+import { Pagination } from "@/components/admin/Pagination";
+
 type PageProps = {
-  searchParams?: Promise<{ success?: string; error?: string }>;
+  searchParams?: Promise<{ success?: string; error?: string; page?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -24,9 +26,16 @@ export const dynamic = "force-dynamic";
 export default async function GalleryPage({ searchParams }: PageProps) {
   await requireAdminSession();
   const params = await searchParams;
-  const [galleryItems, uploadedVideos] = await Promise.all([
+  const page = Number(params?.page) || 1;
+  const take = 10;
+  const skip = (page - 1) * take;
+
+  const [totalItems, galleryItems, uploadedVideos] = await Promise.all([
+    prisma.galleryItem.count(),
     prisma.galleryItem.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      skip,
+      take,
     }),
     prisma.mediaFile.findMany({
       where: { mimeType: { startsWith: "video/" } },
@@ -34,10 +43,13 @@ export default async function GalleryPage({ searchParams }: PageProps) {
     }),
   ]);
 
-  const nextSortOrder =
-    galleryItems.length > 0
-      ? Math.max(...galleryItems.map((g) => g.sortOrder)) + 1
-      : 0;
+  const totalPages = Math.ceil(totalItems / take);
+
+  // We need to know the nextSortOrder based on the maximum globally, not just the current page
+  const maxSortItem = await prisma.galleryItem.findFirst({
+    orderBy: { sortOrder: "desc" },
+  });
+  const nextSortOrder = maxSortItem ? maxSortItem.sortOrder + 1 : 0;
 
   return (
     <div>
@@ -196,6 +208,8 @@ export default async function GalleryPage({ searchParams }: PageProps) {
             ))}
           </tbody>
         </AdminTable>
+        
+        <Pagination totalPages={totalPages} />
       </section>
     </div>
   );

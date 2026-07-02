@@ -78,24 +78,7 @@ export const heroSchema = z.object({
   sortOrder: z.number().int(),
 });
 
-export const eventSchema = z.object({
-  title: requiredText("Title"),
-  artistName: requiredText("Artist name"),
-  talentLabel: requiredText("Talent label"),
-  eventDateLabel: requiredText("Event date"),
-  eventTimeLabel: requiredText("Event time"),
-  scheduledAt: z.date().nullable(),
-  eventTypeLabel: optionalText,
-  headlineLine1: requiredText("Headline line 1"),
-  headlineHighlight1: requiredText("Headline highlight 1"),
-  headlineLine2: requiredText("Headline line 2"),
-  headlineHighlight2: requiredText("Headline highlight 2"),
-  backgroundImage: optionalText,
-  ctaLabel: requiredText("CTA label"),
-  whatsappMessage: optionalText,
-  isActive: z.boolean(),
-  sortOrder: z.number().int(),
-});
+
 
 export const locationSchema = z.object({
   businessName: requiredText("Business name"),
@@ -156,4 +139,53 @@ export const siteSettingsSchema = z.object({
   tiktokUrl: z.string().trim().url("TikTok URL must be valid"),
   menuUrl: z.string().trim().url("Menu URL must be valid"),
   footerCopyright: requiredText("Footer copyright"),
+});
+
+export const eventTemplateSchema = z.enum([
+  "REGULER_MATCH",
+  "NOBAR_COMMUNITY",
+  "BIG_MATCH",
+  "SUPER_BIG_MATCH",
+  "IFTAR_2027",
+  "DELIVERY_ORDER",
+]);
+
+export const eventCategorySchema = z.enum(["LIVE_EVENT", "BOOKING_EVENT"]);
+
+export const memberSchema = z.object({
+  username: requiredText("Username"),
+  discountPercent: z
+    .number()
+    .min(0, "Discount must be 0 or higher")
+    .max(100, "Discount cannot exceed 100%"),
+  benefitNote: optionalText,
+  isActive: z.boolean(),
+});
+
+export const deliveryCategorySchema = z.enum(["BEVERAGES", "FOOD"]);
+
+export const bookingEventSchema = z.object({
+  category: eventCategorySchema,
+  title: requiredText("Title"),
+  eventType: eventTemplateSchema,
+  eventTypeLabel: optionalText,
+  artistName: optionalText,
+  talentLabel: optionalText,
+  eventDateLabel: requiredText("Event date label"),
+  eventTimeLabel: requiredText("Event time label"),
+  scheduledAt: z.date().nullable(),
+  description: optionalText,
+  whatsappMessage: optionalText,
+  headlineLine1: optionalText,
+  headlineHighlight1: optionalText,
+  headlineLine2: optionalText,
+  headlineHighlight2: optionalText,
+  backgroundImage: optionalText,
+  posterImage: optionalText,
+  openGateInfo: optionalText,
+  tableInfo: optionalText,
+  ctaLabel: requiredText("CTA label"),
+  allowAlaCarte: z.boolean(),
+  isActive: z.boolean(),
+  sortOrder: z.number().int(),
 });

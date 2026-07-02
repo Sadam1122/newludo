@@ -68,6 +68,7 @@ export function LocationForm({ location }: LocationFormProps) {
           label="Upload Map Image"
           name="mapImageFile"
           value={location?.mapImage}
+          tooltip="Optimal resolution: 1200x800px (3:2) or any landscape ratio."
         />
       </div>
 
@@ -118,18 +119,25 @@ function Field({
   );
 }
 
+import { InfoTooltip } from "./InfoTooltip";
+
 function FileField({
   label,
   name,
   value,
+  tooltip,
 }: {
   label: string;
   name: string;
   value?: string | null;
+  tooltip?: string;
 }) {
   return (
     <label className="block">
-      <FormFieldLabel required={false}>{label}</FormFieldLabel>
+      <FormFieldLabel required={false}>
+        {label}
+        {tooltip && <InfoTooltip info={tooltip} />}
+      </FormFieldLabel>
       <input
         name={name}
         type="file"

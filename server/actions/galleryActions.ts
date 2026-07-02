@@ -65,6 +65,53 @@ export async function createGalleryItem(formData: FormData) {
   redirectWithMessage(adminPath, "success", "Gallery video created.");
 }
 
+export async function createMultipleGalleryItems(formData: FormData) {
+  await requireAdminSession();
+
+  try {
+    const videoFiles = formData.getAll("videoFiles") as File[];
+    const nextSortOrder = Number(formData.get("nextSortOrder")) || 0;
+
+    if (!videoFiles || videoFiles.length === 0) {
+      throw new Error("No video files provided.");
+    }
+
+    const createdItems = [];
+    
+    for (let i = 0; i < videoFiles.length; i++) {
+      const file = videoFiles[i];
+      if (!file.name || file.size === 0) continue;
+      
+      const media = await saveUploadedVideo(file);
+      
+      // Auto-generate title from filename (remove extension)
+      const title = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      
+      const data = {
+        title,
+        videoUrl: media.url,
+        isActive: true,
+        sortOrder: nextSortOrder + i,
+      };
+      
+      const item = await prisma.galleryItem.create({ data });
+      createdItems.push(item);
+    }
+
+    if (createdItems.length === 0) {
+      throw new Error("Failed to process any valid video files.");
+    }
+
+    revalidatePath("/");
+    revalidatePath(adminPath);
+    revalidatePath("/admin/media");
+  } catch (error) {
+    redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
+  }
+
+  redirectWithMessage(adminPath, "success", "Bulk gallery videos uploaded.");
+}
+
 export async function updateGalleryItem(formData: FormData) {
   await requireAdminSession();
 

@@ -2,14 +2,17 @@ import { BrandSection } from "@/components/public/BrandSection";
 import { EventBanner } from "@/components/public/EventBanner";
 import { FAQSection } from "@/components/public/FAQSection";
 import { Footer } from "@/components/public/Footer";
+import { GallerySection } from "@/components/public/GallerySection";
 import { Header } from "@/components/public/Header";
 import { HeroSection } from "@/components/public/HeroSection";
 import { LocationSection } from "@/components/public/LocationSection";
 import { MatchSection } from "@/components/public/MatchSection";
 import type {
   BrandSection as BrandSectionModel,
-  EventBanner as EventBannerModel,
+  BookingEvent as BookingEventModel,
+  EventTable,
   FAQItem,
+  GalleryItem,
   HeroSection as HeroSectionModel,
   LocationSetting,
   MatchCard,
@@ -20,11 +23,13 @@ import type {
   PublicBrand,
   PublicEvent,
   PublicFAQ,
+  PublicGalleryItem,
   PublicHero,
   PublicLocation,
   PublicMatch,
   PublicSettings,
 } from "@/components/public/types";
+import { computeAvailability } from "@/lib/bookingAvailability";
 import { prisma } from "@/lib/prisma";
 import { getJakartaStartOfToday, isUpcomingOrUndated } from "@/lib/schedule";
 import {
@@ -168,6 +173,9 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     subTextTitle: null,
     whatsappMessage: "Halo LUDO, saya ingin booking match England vs Spain.",
     showSoldOutStamp: false,
+    bookingEventId: null,
+    availableTables: null,
+    totalTables: null,
   },
   {
     id: "default-match-2",
@@ -189,6 +197,9 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     subTextTitle: null,
     whatsappMessage: "Halo LUDO, saya ingin booking match Brazil vs Argentina.",
     showSoldOutStamp: false,
+    bookingEventId: null,
+    availableTables: null,
+    totalTables: null,
   },
   {
     id: "default-match-3",
@@ -210,6 +221,9 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     subTextTitle: null,
     whatsappMessage: null,
     showSoldOutStamp: true,
+    bookingEventId: null,
+    availableTables: null,
+    totalTables: null,
   },
   {
     id: "default-match-4",
@@ -232,6 +246,9 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     whatsappMessage:
       "Halo LUDO, saya ingin booking match Netherlands vs Portugal.",
     showSoldOutStamp: false,
+    bookingEventId: null,
+    availableTables: null,
+    totalTables: null,
   },
   {
     id: "default-match-5",
@@ -253,6 +270,9 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     subTextTitle: null,
     whatsappMessage: "Halo LUDO, saya ingin booking match Spain vs Germany.",
     showSoldOutStamp: false,
+    bookingEventId: null,
+    availableTables: null,
+    totalTables: null,
   },
   {
     id: "default-match-6",
@@ -275,12 +295,16 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     subTextTitle: null,
     whatsappMessage: "Halo LUDO, saya ingin booking match Brazil vs England.",
     showSoldOutStamp: false,
+    bookingEventId: null,
+    availableTables: null,
+    totalTables: null,
   },
 ];
 
 const DEFAULT_EVENTS: PublicEvent[] = [
   {
     id: "default-event-1",
+    category: "LIVE_EVENT",
     title: "Live Performance",
     artistName: "AGNES MONICA",
     talentLabel: "Talent",
@@ -296,9 +320,12 @@ const DEFAULT_EVENTS: PublicEvent[] = [
     ctaLabel: "RESERVE SEAT",
     whatsappMessage:
       "Halo LUDO, saya ingin reservasi seat untuk event Agnes Monica.",
+    availableTables: null,
+    totalTables: null,
   },
   {
     id: "default-event-2",
+    category: "LIVE_EVENT",
     title: "Match Night",
     artistName: "LUDO CROWD",
     talentLabel: "Talent",
@@ -313,6 +340,8 @@ const DEFAULT_EVENTS: PublicEvent[] = [
     backgroundImage: "/uploads/event-dj-night.png",
     ctaLabel: "RESERVE TABLE",
     whatsappMessage: "Halo LUDO, saya ingin reservasi table untuk match night.",
+    availableTables: null,
+    totalTables: null,
   },
 ];
 
@@ -374,18 +403,25 @@ const DEFAULT_FAQS: PublicFAQ[] = [
   },
 ];
 
+type MatchCardWithBookingEvent = MatchCard & {
+  bookingEvent: (BookingEventModel & { tables: EventTable[] }) | null;
+};
+
+type BookingEventWithTables = BookingEventModel & { tables: EventTable[] };
+
 type HomepageContent = readonly [
   SiteSetting | null,
   HeroSectionModel[],
-  MatchCard[],
-  EventBannerModel[],
+  MatchCardWithBookingEvent[],
+  BookingEventWithTables[],
   LocationSetting | null,
   FAQItem[],
   BrandSectionModel[],
+  GalleryItem[],
 ];
 
 export default async function HomePage() {
-  const [settings, heroes, matches, events, location, faqs, brands] =
+  const [settings, heroes, matches, events, location, faqs, brands, gallery] =
     await getHomepageContent();
 
   const publicSettings: PublicSettings = {
@@ -435,49 +471,74 @@ export default async function HomePage() {
 
   const publicMatches: PublicMatch[] =
     matches.length > 0
-      ? matches.map((match) => ({
-          id: match.id,
-          displayMode: match.displayMode,
-          leagueName: match.leagueName,
-          title: match.title,
-          categoryLabel: match.categoryLabel,
-          description: match.description,
-          eventImage: match.eventImage,
-          homeTeamName: match.homeTeamName,
-          awayTeamName: match.awayTeamName,
-          homeTeamLogo: match.homeTeamLogo,
-          awayTeamLogo: match.awayTeamLogo,
-          matchDateLabel: match.matchDateLabel,
-          matchTimeLabel: match.matchTimeLabel,
-          scheduledAt: match.scheduledAt?.toISOString() ?? null,
-          status: match.status,
-          buttonLabel: match.buttonLabel,
-          subTextTitle: match.subTextTitle,
-          whatsappMessage: match.whatsappMessage,
-          showSoldOutStamp: match.showSoldOutStamp,
-        }))
+      ? matches.map((match) => {
+          const linkedTables = match.bookingEvent?.tables ?? [];
+          const availability = computeAvailability(linkedTables);
+          return {
+            id: match.id,
+            displayMode: match.displayMode,
+            leagueName: match.leagueName,
+            title: match.title,
+            categoryLabel: match.categoryLabel,
+            description: match.description,
+            eventImage: match.eventImage,
+            homeTeamName: match.homeTeamName,
+            awayTeamName: match.awayTeamName,
+            homeTeamLogo: match.homeTeamLogo,
+            awayTeamLogo: match.awayTeamLogo,
+            matchDateLabel: match.matchDateLabel,
+            matchTimeLabel: match.matchTimeLabel,
+            scheduledAt: match.scheduledAt?.toISOString() ?? null,
+            status: match.bookingEvent ? availability.status : match.status,
+            buttonLabel: match.buttonLabel,
+            subTextTitle: match.subTextTitle,
+            whatsappMessage: match.whatsappMessage,
+            showSoldOutStamp: match.showSoldOutStamp,
+            bookingEventId: match.bookingEventId,
+            availableTables: match.bookingEvent ? availability.availableTables : null,
+            totalTables: match.bookingEvent ? availability.totalTables : null,
+          };
+        })
       : DEFAULT_MATCHES;
 
   const publicEvents: PublicEvent[] =
     events.length > 0
-      ? events.map((event) => ({
-          id: event.id,
-          title: event.title,
-          artistName: event.artistName,
-          talentLabel: event.talentLabel,
-          eventDateLabel: event.eventDateLabel,
-          eventTimeLabel: event.eventTimeLabel,
-          scheduledAt: event.scheduledAt?.toISOString() ?? null,
-          eventTypeLabel: event.eventTypeLabel,
-          headlineLine1: event.headlineLine1,
-          headlineHighlight1: event.headlineHighlight1,
-          headlineLine2: event.headlineLine2,
-          headlineHighlight2: event.headlineHighlight2,
-          backgroundImage: event.backgroundImage,
-          ctaLabel: event.ctaLabel,
-          whatsappMessage: event.whatsappMessage,
-        }))
+      ? events.map((event) => {
+          const availability = computeAvailability(event.tables);
+          return {
+            id: event.id,
+            category: event.category,
+            title: event.title,
+            artistName: event.artistName ?? "",
+            talentLabel: event.talentLabel ?? "",
+            eventDateLabel: event.eventDateLabel,
+            eventTimeLabel: event.eventTimeLabel,
+            scheduledAt: event.scheduledAt?.toISOString() ?? null,
+            eventTypeLabel:
+              event.category === "LIVE_EVENT"
+                ? event.eventTypeLabel || event.title
+                : event.eventType.replace(/_/g, " "),
+            headlineLine1: event.headlineLine1 ?? "",
+            headlineHighlight1: event.headlineHighlight1 ?? "",
+            headlineLine2: event.headlineLine2 ?? "",
+            headlineHighlight2: event.headlineHighlight2 ?? "",
+            backgroundImage: event.backgroundImage,
+            ctaLabel: event.ctaLabel,
+            whatsappMessage:
+              event.category === "LIVE_EVENT" ? event.whatsappMessage : null,
+            availableTables: event.tables.length > 0 ? availability.availableTables : null,
+            totalTables: event.tables.length > 0 ? availability.totalTables : null,
+          };
+        })
       : DEFAULT_EVENTS;
+
+  const publicGallery: PublicGalleryItem[] = gallery.map((item) => ({
+    id: item.id,
+    title: item.title,
+    caption: item.caption,
+    videoUrl: item.videoUrl,
+    thumbnailUrl: item.thumbnailUrl,
+  }));
 
   const publicLocation: PublicLocation = location
     ? {
@@ -563,8 +624,6 @@ export default async function HomePage() {
       <MatchSection
         title={publicSettings.matchSectionTitle}
         matches={publicMatches}
-        whatsappNumber={publicSettings.whatsappNumber}
-        defaultMessage={publicSettings.defaultWhatsappMessage}
       />
       <HeroSection
         heroes={publicHeroes}
@@ -578,6 +637,7 @@ export default async function HomePage() {
       />
       <LocationSection location={publicLocation} />
       <FAQSection faqs={publicFaqs} />
+      <GallerySection items={publicGallery} />
       <BrandSection brands={publicBrands} />
       <Footer copyright={publicSettings.footerCopyright} />
     </main>
@@ -603,10 +663,12 @@ async function getHomepageContent(): Promise<HomepageContent> {
           { sortOrder: "asc" },
           { createdAt: "desc" },
         ],
+        include: { bookingEvent: { include: { tables: true } } },
       }),
-      prisma.eventBanner.findMany({
+      prisma.bookingEvent.findMany({
         where: {
           isActive: true,
+          eventType: { not: "DELIVERY_ORDER" },
           OR: [{ scheduledAt: null }, { scheduledAt: { gte: today } }],
         },
         orderBy: [
@@ -614,6 +676,7 @@ async function getHomepageContent(): Promise<HomepageContent> {
           { sortOrder: "asc" },
           { createdAt: "desc" },
         ],
+        include: { tables: true },
       }),
       prisma.locationSetting.findFirst({ orderBy: { createdAt: "asc" } }),
       prisma.fAQItem.findMany({
@@ -624,9 +687,13 @@ async function getHomepageContent(): Promise<HomepageContent> {
         where: { isActive: true },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       }),
+      prisma.galleryItem.findMany({
+        where: { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      }),
     ]);
 
-    const [settings, heroes, matches, events, location, faqs, brands] = result;
+    const [settings, heroes, matches, events, location, faqs, brands, gallery] = result;
 
     return [
       settings,
@@ -640,10 +707,11 @@ async function getHomepageContent(): Promise<HomepageContent> {
       location,
       faqs,
       brands,
+      gallery,
     ];
   } catch {
     console.warn("Unable to load public CMS content. Rendering fallback data.");
-    return [null, [], [], [], null, [], []];
+    return [null, [], [], [], null, [], [], []];
   }
 }
 

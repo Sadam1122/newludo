@@ -12,7 +12,7 @@ import {
   getFormOptionalString,
   getFormString,
 } from "@/lib/utils";
-import { eventSchema, idSchema } from "@/lib/validations";
+import { bookingEventSchema, idSchema } from "@/lib/validations";
 import { saveUploadedImage } from "@/lib/upload";
 import {
   getActionErrorMessage,
@@ -22,101 +22,105 @@ import {
 const adminPath = "/admin/events";
 
 async function buildEventData(formData: FormData) {
-  const parsed = eventSchema.parse({
+  const parsed = bookingEventSchema.parse({
+    category: getFormString(formData, "category"),
     title: getFormString(formData, "title"),
-    artistName: getFormString(formData, "artistName"),
-    talentLabel: getFormString(formData, "talentLabel", "Talent"),
+    eventType: getFormString(formData, "eventType"),
+    eventTypeLabel: getFormOptionalString(formData, "eventTypeLabel"),
+    artistName: getFormOptionalString(formData, "artistName"),
+    talentLabel: getFormOptionalString(formData, "talentLabel"),
     eventDateLabel: getFormString(formData, "eventDateLabel"),
     eventTimeLabel: getFormString(formData, "eventTimeLabel"),
     scheduledAt: getFormDate(formData, "scheduledAt"),
-    eventTypeLabel: getFormOptionalString(formData, "eventTypeLabel"),
-    headlineLine1: getFormString(formData, "headlineLine1"),
-    headlineHighlight1: getFormString(formData, "headlineHighlight1"),
-    headlineLine2: getFormString(formData, "headlineLine2"),
-    headlineHighlight2: getFormString(formData, "headlineHighlight2"),
-    backgroundImage: getFormOptionalString(formData, "backgroundImage"),
-    ctaLabel: getFormString(formData, "ctaLabel"),
+    description: getFormOptionalString(formData, "description"),
     whatsappMessage: getFormOptionalString(formData, "whatsappMessage"),
+    headlineLine1: getFormOptionalString(formData, "headlineLine1"),
+    headlineHighlight1: getFormOptionalString(formData, "headlineHighlight1"),
+    headlineLine2: getFormOptionalString(formData, "headlineLine2"),
+    headlineHighlight2: getFormOptionalString(formData, "headlineHighlight2"),
+    backgroundImage: getFormOptionalString(formData, "backgroundImage"),
+    posterImage: getFormOptionalString(formData, "posterImage"),
+    openGateInfo: getFormOptionalString(formData, "openGateInfo") || "Open Gate at 21:00 WIB",
+    tableInfo: getFormOptionalString(formData, "tableInfo"),
+    ctaLabel: getFormString(formData, "ctaLabel", "BOOK NOW"),
+    allowAlaCarte: getFormBoolean(formData, "allowAlaCarte"),
     isActive: getFormBoolean(formData, "isActive"),
     sortOrder: getFormNumber(formData, "sortOrder"),
   });
 
-  const file = getFormFile(formData, "backgroundImageFile");
-  if (file) {
-    const media = await saveUploadedImage(file);
+  const bannerFile = getFormFile(formData, "bannerFile");
+  if (bannerFile) {
+    const media = await saveUploadedImage(bannerFile);
     parsed.backgroundImage = media.url;
   }
 
   return parsed;
 }
 
-export async function createEvent(formData: FormData) {
-  await requireAdminSession();
-
+export async function createEvent(prevState: any, formData: FormData) {
   try {
+    await requireAdminSession();
     const data = await buildEventData(formData);
-    await prisma.eventBanner.create({ data });
+
+    await prisma.bookingEvent.create({ data });
+
     revalidatePath("/");
     revalidatePath(adminPath);
   } catch (error) {
-    redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
+    return { error: getActionErrorMessage(error) };
   }
 
-  redirectWithMessage(adminPath, "success", "Event created.");
+  redirectWithMessage(adminPath, "success", "Event created successfully");
 }
 
-export async function updateEvent(formData: FormData) {
-  await requireAdminSession();
-
+export async function updateEvent(id: string, prevState: any, formData: FormData) {
   try {
-    const id = idSchema.parse(getFormString(formData, "id"));
+    await requireAdminSession();
+    const validId = idSchema.parse(id);
     const data = await buildEventData(formData);
-    await prisma.eventBanner.update({ where: { id }, data });
-    revalidatePath("/");
-    revalidatePath(adminPath);
-  } catch (error) {
-    redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
-  }
 
-  redirectWithMessage(adminPath, "success", "Event updated.");
-}
-
-export async function deleteEvent(formData: FormData) {
-  await requireAdminSession();
-
-  try {
-    const id = idSchema.parse(getFormString(formData, "id"));
-    await prisma.eventBanner.delete({ where: { id } });
-    revalidatePath("/");
-    revalidatePath(adminPath);
-  } catch (error) {
-    redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
-  }
-
-  redirectWithMessage(adminPath, "success", "Event deleted.");
-}
-
-export async function toggleEventActive(formData: FormData) {
-  await requireAdminSession();
-
-  try {
-    const id = idSchema.parse(getFormString(formData, "id"));
-    const event = await prisma.eventBanner.findUnique({
-      where: { id },
-      select: { isActive: true },
+    await prisma.bookingEvent.update({
+      where: { id: validId },
+      data,
     });
 
-    if (!event) throw new Error("Event not found.");
-
-    await prisma.eventBanner.update({
-      where: { id },
-      data: { isActive: !event.isActive },
-    });
     revalidatePath("/");
     revalidatePath(adminPath);
   } catch (error) {
-    redirectWithMessage(adminPath, "error", getActionErrorMessage(error));
+    return { error: getActionErrorMessage(error) };
   }
 
-  redirectWithMessage(adminPath, "success", "Event visibility updated.");
+  redirectWithMessage(adminPath, "success", "Event updated successfully");
+}
+
+export async function deleteEvent(id: string) {
+  try {
+    await requireAdminSession();
+    const validId = idSchema.parse(id);
+    await prisma.bookingEvent.delete({ where: { id: validId } });
+
+    revalidatePath("/");
+    revalidatePath(adminPath);
+    return { success: true };
+  } catch (error) {
+    return { error: getActionErrorMessage(error) };
+  }
+}
+
+export async function toggleEventActive(id: string, isActive: boolean) {
+  try {
+    await requireAdminSession();
+    const validId = idSchema.parse(id);
+
+    await prisma.bookingEvent.update({
+      where: { id: validId },
+      data: { isActive },
+    });
+
+    revalidatePath("/");
+    revalidatePath(adminPath);
+    return { success: true };
+  } catch (error) {
+    return { error: getActionErrorMessage(error) };
+  }
 }

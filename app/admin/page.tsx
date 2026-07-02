@@ -49,7 +49,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
   ] = await Promise.all([
     prisma.matchCard.count(),
     prisma.matchCard.count({ where: { isActive: true } }),
-    prisma.eventBanner.count({ where: { isActive: true } }),
+    prisma.bookingEvent.count({ where: { isActive: true } }),
     prisma.fAQItem.count(),
     prisma.mediaFile.count(),
     prisma.galleryItem.count({ where: { isActive: true } }),
@@ -62,7 +62,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         orderBy: { updatedAt: "desc" },
         select: { updatedAt: true },
       }),
-      prisma.eventBanner.findFirst({
+      prisma.bookingEvent.findFirst({
         orderBy: { updatedAt: "desc" },
         select: { updatedAt: true },
       }),

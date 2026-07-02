@@ -1,13 +1,11 @@
-import type { SiteSetting, GalleryItem, EventMiceSetting } from "@prisma/client";
+import type { SiteSetting, EventMiceSetting } from "@prisma/client";
 import type { Metadata } from "next";
 import { CheckCircle2, ChevronRight, MessageSquare, MonitorPlay, Users, Calendar, Music, CarFront, UsersRound, HelpCircle, Briefcase, Ticket, Megaphone, PartyPopper, HeartHandshake } from "lucide-react";
 
 import { EventMiceVenueLayout } from "@/components/public/EventMiceVenueLayout";
-import { GallerySection } from "@/components/public/GallerySection";
 import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
 import type {
-  PublicGalleryItem,
   PublicSettings,
 } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
@@ -55,20 +53,11 @@ const DEFAULT_SETTINGS: PublicSettings = {
 type EventMiceContent = {
   settings: SiteSetting | null;
   miceSetting: EventMiceSetting | null;
-  gallery: GalleryItem[];
 };
 
 export default async function EventMicePage() {
-  const { settings, miceSetting, gallery } = await getEventMiceContent();
+  const { settings, miceSetting } = await getEventMiceContent();
   const publicSettings = toPublicSettings(settings);
-  
-  const publicGallery: PublicGalleryItem[] = gallery.map((item) => ({
-    id: item.id,
-    title: item.title,
-    caption: item.caption,
-    videoUrl: item.videoUrl,
-    thumbnailUrl: item.thumbnailUrl,
-  }));
 
   const heroHeadline = miceSetting?.heroHeadline ?? "SPACE FOR EVERY OCCASION";
   const heroDesc = miceSetting?.heroDescription ?? "Host gathering, meeting, watch party, community event, hingga private celebration dengan suasana sportsbar premium di Bandung.\n\nIndoor & semi outdoor venue dengan giant screen, live entertainment, dan pilihan paket F&B yang dapat disesuaikan dengan kebutuhan acara Anda.";
@@ -300,9 +289,6 @@ export default async function EventMicePage() {
         <EventMiceVenueLayout />
       </div>
 
-      {/* Gallery */}
-      <GallerySection items={publicGallery} />
-
       <Footer copyright={publicSettings.footerCopyright} />
     </main>
   );
@@ -329,16 +315,12 @@ function EventCard({ title, desc, icon, className = "" }: { title: string, desc:
 
 
 async function getEventMiceContent(): Promise<EventMiceContent> {
-  const [settings, miceSetting, gallery] = await Promise.all([
+  const [settings, miceSetting] = await Promise.all([
     prisma.siteSetting.findFirst({ orderBy: { createdAt: "asc" } }),
     prisma.eventMiceSetting.findFirst(),
-    prisma.galleryItem.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-    }),
   ]);
 
-  return { settings, miceSetting, gallery };
+  return { settings, miceSetting };
 }
 
 function toPublicSettings(settings: SiteSetting | null): PublicSettings {

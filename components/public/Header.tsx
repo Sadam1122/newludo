@@ -76,6 +76,7 @@ export function Header({
           {eventMiceVisible ? (
             <HeaderPill href={eventMiceUrl}>{eventMiceLabel}</HeaderPill>
           ) : null}
+          <HeaderPill href="/delivery-order">Delivery Order</HeaderPill>
           <HeaderPill href={menuUrl} external>
             Our Menu
           </HeaderPill>
@@ -95,12 +96,6 @@ export function Header({
               </WhatsAppButton>
             )
           ) : null}
-          <Link
-            href="/admin/login"
-            className="relative z-30 inline-flex min-h-10 touch-manipulation items-center justify-center rounded-full border border-[#2A2A2A] px-4 py-2 text-center text-xs font-black uppercase text-[#F8EDE7] transition hover:border-[#EF1F28] hover:text-[#EF1F28]"
-          >
-            Log In
-          </Link>
         </nav>
 
         <button
@@ -133,6 +128,13 @@ export function Header({
               </HeaderPill>
             ) : null}
             <HeaderPill
+              href="/delivery-order"
+              onClick={() => setOpen(false)}
+              mobile
+            >
+              Delivery Order
+            </HeaderPill>
+            <HeaderPill
               href={menuUrl}
               onClick={() => setOpen(false)}
               external
@@ -161,13 +163,6 @@ export function Header({
                 </WhatsAppButton>
               )
             ) : null}
-            <Link
-              href="/admin/login"
-              onClick={() => setOpen(false)}
-              className="relative z-30 inline-flex min-h-11 touch-manipulation items-center justify-center rounded-full border border-[#2A2A2A] px-4 py-2 text-center text-xs font-black uppercase text-[#F8EDE7] transition hover:border-[#EF1F28] hover:text-[#EF1F28]"
-            >
-              Log In
-            </Link>
           </nav>
         </div>
       ) : null}

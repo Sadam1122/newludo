@@ -1,15 +1,10 @@
 import type { MatchCard } from "@prisma/client";
+import Link from "next/link";
 
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
+import { InfoTooltip } from "@/components/admin/InfoTooltip";
 import { createMatch, updateMatch } from "@/server/actions/matchActions";
-
-const statuses = [
-  "BOOK",
-  "LIMITED",
-  "FULL_BOOKED",
-  "CURRENTLY_SHOWING",
-] as const;
 
 const displayModes = [
   { value: "TEAM_MATCH", label: "Team Match" },
@@ -96,20 +91,25 @@ export function MatchForm({
           defaultValue={toDateTimeLocal(match?.scheduledAt)}
           required={false}
         />
-        <label className="block">
-          <FormFieldLabel>Status</FormFieldLabel>
-          <select
-            name="status"
-            defaultValue={match?.status ?? "BOOK"}
-            className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </label>
+        <input type="hidden" name="status" value={match?.status ?? "BOOK"} />
+        <div className="block lg:col-span-2">
+          <FormFieldLabel required={false}>
+            Payment & Booking
+            <InfoTooltip info="Every match automatically gets its own table + package payment flow — no manual linking needed. Status (Book/Limited/Full Booked) is calculated live from that event's table availability." />
+          </FormFieldLabel>
+          {isEditing && match?.bookingEventId ? (
+            <Link
+              href={`/admin/events/${match.bookingEventId}`}
+              className="inline-flex h-11 items-center rounded border border-ludo-gold/40 bg-ludo-gold/10 px-3 text-sm font-bold text-ludo-gold hover:bg-ludo-gold/20"
+            >
+              Manage tables & packages for this match →
+            </Link>
+          ) : (
+            <p className="flex h-11 items-center text-sm text-zinc-400">
+              A booking event (tables, ready for packages) will be created automatically on save.
+            </p>
+          )}
+        </div>
         <Field
           label="Button Label"
           name="buttonLabel"
@@ -138,6 +138,7 @@ export function MatchForm({
           label="Upload Home Logo"
           name="homeTeamLogoFile"
           value={match?.homeTeamLogo}
+          tooltip="Optimal resolution: 300x300px (1:1/Square). PNG with transparent background recommended."
         />
         <Field
           label="Away Logo URL"
@@ -149,6 +150,7 @@ export function MatchForm({
           label="Upload Away Logo"
           name="awayTeamLogoFile"
           value={match?.awayTeamLogo}
+          tooltip="Optimal resolution: 300x300px (1:1/Square). PNG with transparent background recommended."
         />
         <Field
           label="General Event Image URL"
@@ -160,6 +162,7 @@ export function MatchForm({
           label="Upload General Event Image"
           name="eventImageFile"
           value={match?.eventImage}
+          tooltip="Optimal resolution: 1080x1080px (1:1/Square) or 1080x1350px (4:5/Portrait). Used if no teams are set."
         />
       </div>
 
@@ -171,16 +174,6 @@ export function MatchForm({
           name="description"
           rows={3}
           defaultValue={match?.description ?? ""}
-          className="w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-white outline-none focus:border-ludo-gold"
-        />
-      </label>
-
-      <label className="block">
-        <FormFieldLabel required={false}>WhatsApp Message</FormFieldLabel>
-        <textarea
-          name="whatsappMessage"
-          rows={3}
-          defaultValue={match?.whatsappMessage ?? ""}
           className="w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 py-2 text-white outline-none focus:border-ludo-gold"
         />
       </label>
@@ -258,14 +251,19 @@ function FileField({
   label,
   name,
   value,
+  tooltip,
 }: {
   label: string;
   name: string;
   value?: string | null;
+  tooltip?: string;
 }) {
   return (
     <label className="block">
-      <FormFieldLabel required={false}>{label}</FormFieldLabel>
+      <FormFieldLabel required={false}>
+        {label}
+        {tooltip && <InfoTooltip info={tooltip} />}
+      </FormFieldLabel>
       <input
         name={name}
         type="file"

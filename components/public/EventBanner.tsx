@@ -6,9 +6,11 @@ import {
   ChevronRight,
   Clock,
   Music2,
+  Trophy,
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { isInteractiveTarget } from "@/components/public/interaction";
@@ -162,7 +164,11 @@ export function EventBanner({
 
             <div className="rounded-[20px] border border-white/12 bg-black/58 p-4 backdrop-blur-md sm:rounded-[24px] sm:p-7">
               <p className="flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#F7C600] sm:text-xs sm:tracking-[0.24em]">
-                <Music2 className="h-4 w-4" aria-hidden="true" />
+                {event.category === "LIVE_EVENT" ? (
+                  <Music2 className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Trophy className="h-4 w-4" aria-hidden="true" />
+                )}
                 {event.eventTypeLabel ?? event.title}
               </p>
               <h3 className="font-display mt-4 break-words text-[clamp(3.2rem,14vw,7.5rem)] uppercase leading-[0.84] text-[#EF1F28] sm:text-[clamp(4rem,9vw,7.5rem)] sm:leading-[0.82]">
@@ -170,19 +176,15 @@ export function EventBanner({
               </h3>
 
               {event.backgroundImage ? (
-                <div className="relative mx-auto mt-5 aspect-[4/5] w-full max-w-[300px] overflow-hidden rounded-[18px] border border-white/10 bg-[#111111] shadow-[0_22px_70px_rgba(0,0,0,0.38)] sm:max-w-[360px] sm:rounded-[20px]">
-                  <Image
+                <div className="relative mx-auto mt-5 w-full max-w-[300px] sm:max-w-[360px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     key={`${event.id}-preview`}
                     src={event.backgroundImage}
                     alt={event.title}
-                    fill
-                    sizes="(min-width: 1024px) 360px, 82vw"
-                    className="object-cover"
-                    unoptimized={shouldBypassImageOptimization(
-                      event.backgroundImage,
-                    )}
+                    className="h-auto w-full rounded-[18px] border border-white/10 shadow-[0_22px_70px_rgba(0,0,0,0.38)] sm:rounded-[20px]"
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,rgba(0,0,0,0.62)_100%)]" />
+                  <div className="pointer-events-none absolute inset-0 rounded-[18px] bg-[linear-gradient(180deg,transparent_30%,rgba(0,0,0,0.62)_100%)] sm:rounded-[20px]" />
                 </div>
               ) : null}
 
@@ -204,15 +206,38 @@ export function EventBanner({
                 </InfoRow>
               </div>
 
-              <div className="relative z-30 mt-7 flex flex-wrap items-center gap-3 sm:mt-8">
-                <WhatsAppButton
-                  phoneNumber={whatsappNumber}
-                  message={event.whatsappMessage ?? defaultMessage}
-                  variant="neon"
-                  className="w-full sm:w-auto"
+              {event.totalTables !== null && event.totalTables > 0 ? (
+                <p
+                  className={cn(
+                    "mt-4 inline-flex rounded-full px-3 py-1.5 text-xs font-black uppercase",
+                    event.availableTables === 0
+                      ? "bg-[#EF1F28]/15 text-[#EF1F28]"
+                      : "bg-[#25D366]/15 text-[#25D366]",
+                  )}
                 >
-                  {event.ctaLabel}
-                </WhatsAppButton>
+                  {event.availableTables === 0
+                    ? "FULL BOOKED"
+                    : `${event.availableTables}/${event.totalTables} Tables Left`}
+                </p>
+              ) : null}
+
+              <div className="relative z-30 mt-7 flex flex-wrap items-center gap-3 sm:mt-8">
+                {event.category === "LIVE_EVENT" ? (
+                  <WhatsAppButton
+                    phoneNumber={whatsappNumber}
+                    message={event.whatsappMessage ?? defaultMessage}
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[linear-gradient(90deg,#EF1F28,#F7C600)] px-6 text-sm font-black uppercase text-white shadow-[0_14px_34px_rgba(239,31,40,0.24)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(247,198,0,0.3)] w-full sm:w-auto"
+                  >
+                    {event.ctaLabel}
+                  </WhatsAppButton>
+                ) : (
+                  <Link
+                    href={`/book/${event.id}`}
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[linear-gradient(90deg,#EF1F28,#F7C600)] px-6 text-sm font-black uppercase text-white shadow-[0_14px_34px_rgba(239,31,40,0.24)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(247,198,0,0.3)] w-full sm:w-auto"
+                  >
+                    {event.ctaLabel}
+                  </Link>
+                )}
                 <div className="flex gap-2 md:hidden">
                   <MobileArrow
                     label="Previous event"
