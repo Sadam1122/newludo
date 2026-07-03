@@ -6,11 +6,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PublicMatch } from "@/components/public/types";
+import { WhatsAppButton } from "@/components/public/WhatsAppButton";
 import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type MatchSectionProps = {
   title: string;
   matches: PublicMatch[];
+  whatsappNumber: string;
+  defaultMessage: string;
 };
 
 const statusCopy: Record<PublicMatch["status"], string> = {
@@ -23,6 +26,8 @@ const statusCopy: Record<PublicMatch["status"], string> = {
 export function MatchSection({
   title,
   matches,
+  whatsappNumber,
+  defaultMessage,
 }: MatchSectionProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -169,7 +174,11 @@ export function MatchSection({
                   key={match.id}
                   className="min-w-full snap-start sm:min-w-[calc(50%-0.625rem)] lg:min-w-[calc(25%-1.125rem)]"
                 >
-                  <MatchCard match={match} />
+                  <MatchCard
+                    match={match}
+                    whatsappNumber={whatsappNumber}
+                    defaultMessage={defaultMessage}
+                  />
                 </div>
               ))}
             </div>
@@ -223,11 +232,21 @@ export function MatchSection({
   );
 }
 
-function MatchCard({ match }: { match: PublicMatch }) {
+function MatchCard({
+  match,
+  whatsappNumber,
+  defaultMessage,
+}: {
+  match: PublicMatch;
+  whatsappNumber: string;
+  defaultMessage: string;
+}) {
   const isFull = match.status === "FULL_BOOKED";
   const shouldStamp = isFull || match.showSoldOutStamp;
   const isGeneral = match.displayMode === "GENERAL_EVENT";
-  const isBookable = Boolean(match.bookingEventId);
+  // Only offer the real payment flow once the linked event actually has packages
+  // configured — otherwise fall back to WhatsApp instead of a dead-end booking page.
+  const isBookable = Boolean(match.bookingEventId) && match.hasPackages;
 
   return (
     <article className="group relative min-h-[366px] overflow-hidden rounded-[22px] border border-white/10 bg-[#0B0B0B] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.34)] transition duration-300 hover:-translate-y-1 hover:border-[#EF1F28]/60 sm:min-h-[386px] sm:p-5">
@@ -278,9 +297,14 @@ function MatchCard({ match }: { match: PublicMatch }) {
             {match.buttonLabel}
           </Link>
         ) : (
-          <span className="inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-full border border-white/15 px-4 text-center text-sm font-black uppercase text-white/40">
-            Coming Soon
-          </span>
+          <WhatsAppButton
+            phoneNumber={whatsappNumber}
+            message={match.whatsappMessage ?? defaultMessage}
+            variant="solid"
+            className="w-full"
+          >
+            {match.buttonLabel}
+          </WhatsAppButton>
         )}
       </div>
     </article>

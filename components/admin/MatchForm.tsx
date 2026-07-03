@@ -1,5 +1,4 @@
 import type { MatchCard } from "@prisma/client";
-import Link from "next/link";
 
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
@@ -92,24 +91,6 @@ export function MatchForm({
           required={false}
         />
         <input type="hidden" name="status" value={match?.status ?? "BOOK"} />
-        <div className="block lg:col-span-2">
-          <FormFieldLabel required={false}>
-            Payment & Booking
-            <InfoTooltip info="Every match automatically gets its own table + package payment flow — no manual linking needed. Status (Book/Limited/Full Booked) is calculated live from that event's table availability." />
-          </FormFieldLabel>
-          {isEditing && match?.bookingEventId ? (
-            <Link
-              href={`/admin/events/${match.bookingEventId}`}
-              className="inline-flex h-11 items-center rounded border border-ludo-gold/40 bg-ludo-gold/10 px-3 text-sm font-bold text-ludo-gold hover:bg-ludo-gold/20"
-            >
-              Manage tables & packages for this match →
-            </Link>
-          ) : (
-            <p className="flex h-11 items-center text-sm text-zinc-400">
-              A booking event (tables, ready for packages) will be created automatically on save.
-            </p>
-          )}
-        </div>
         <Field
           label="Button Label"
           name="buttonLabel"

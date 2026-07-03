@@ -1,4 +1,5 @@
 import { ToggleLeft, ToggleRight } from "lucide-react";
+import Link from "next/link";
 
 import { ActiveStatusBadge } from "@/components/admin/ActiveStatusBadge";
 import { AdminCard } from "@/components/admin/AdminCard";
@@ -23,7 +24,14 @@ export default async function MatchesPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const matches = await prisma.matchCard.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-    include: { bookingEvent: { include: { tables: true } } },
+    include: {
+      bookingEvent: {
+        include: {
+          tables: true,
+          _count: { select: { packages: true } },
+        },
+      },
+    },
   });
 
   const nextSortOrder =
@@ -139,9 +147,17 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                           <p className="mt-1 text-[10px] font-bold uppercase text-white/40">
                             {availability.availableTables}/{availability.totalTables} tables left
                           </p>
-                          <p className="mt-1 text-[10px] text-ludo-gold">
-                            Linked: {match.bookingEvent!.title}
-                          </p>
+                          {match.bookingEvent!._count.packages === 0 ? (
+                            <p className="mt-1 text-[10px] font-bold uppercase text-ludo-red">
+                              No packages yet — showing WhatsApp
+                            </p>
+                          ) : null}
+                          <Link
+                            href={`/admin/events/${match.bookingEvent!.id}`}
+                            className="mt-1 inline-block text-[10px] font-bold text-ludo-gold hover:underline"
+                          >
+                            Manage packages →
+                          </Link>
                         </>
                       );
                     })()

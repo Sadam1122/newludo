@@ -40,11 +40,17 @@ export default async function EditEventPage({
       </div>
       <EventForm event={event} />
 
-      {event.category === "BOOKING_EVENT" && (
+      {event.category === "BOOKING_EVENT" && event.eventType !== "REGULER_MATCH" && (
         <>
           <PackageManager bookingEventId={event.id} packages={event.packages} />
           <TableManager bookingEventId={event.id} tables={event.tables} />
         </>
+      )}
+      {event.eventType === "REGULER_MATCH" && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-5 text-sm text-zinc-400">
+          <b className="text-white">REGULER MATCH</b> uses a WhatsApp CTA only — table & package
+          management is hidden because this event never goes through the payment flow.
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { BookingForm } from "@/components/public/BookingForm";
+import { WhatsAppButton } from "@/components/public/WhatsAppButton";
+import { DEFAULT_WHATSAPP_MESSAGE, DEFAULT_WHATSAPP_NUMBER } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +32,14 @@ export default async function BookingPage({ params }: Props) {
     notFound();
   }
 
-  const alaCarteMenu = event.allowAlaCarte
+  // REGULER_MATCH is the "WhatsApp CTA only" template — it never uses the
+  // full table + package payment flow, regardless of tables/packages configured.
+  const isWhatsappOnly = event.eventType === "REGULER_MATCH";
+  const settings = isWhatsappOnly
+    ? await prisma.siteSetting.findFirst({ orderBy: { createdAt: "asc" } })
+    : null;
+
+  const alaCarteMenu = event.allowAlaCarte && !isWhatsappOnly
     ? await prisma.eventPackage.findMany({
         where: {
           isActive: true,
@@ -109,7 +118,27 @@ export default async function BookingPage({ params }: Props) {
 
         {/* Full Width Booking Form Section */}
         <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-900/50 p-6 sm:p-10 shadow-2xl backdrop-blur-md">
-          <BookingForm event={event} alaCarteMenu={alaCarteMenu} />
+          {isWhatsappOnly ? (
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
+              <p className="max-w-md text-sm text-zinc-400">
+                Untuk reservasi {event.title}, silakan hubungi kami langsung lewat WhatsApp.
+              </p>
+              <WhatsAppButton
+                phoneNumber={settings?.whatsappNumber ?? DEFAULT_WHATSAPP_NUMBER}
+                message={
+                  event.whatsappMessage ??
+                  settings?.defaultWhatsappMessage ??
+                  DEFAULT_WHATSAPP_MESSAGE
+                }
+                variant="solid"
+                className="w-full max-w-xs justify-center"
+              >
+                {event.ctaLabel || "Chat via WhatsApp"}
+              </WhatsAppButton>
+            </div>
+          ) : (
+            <BookingForm event={event} alaCarteMenu={alaCarteMenu} />
+          )}
         </div>
       </div>
     </main>

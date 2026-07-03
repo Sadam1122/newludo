@@ -10,6 +10,7 @@ import { MatchSection } from "@/components/public/MatchSection";
 import type {
   BrandSection as BrandSectionModel,
   BookingEvent as BookingEventModel,
+  EventPackage,
   EventTable,
   FAQItem,
   GalleryItem,
@@ -176,6 +177,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     bookingEventId: null,
     availableTables: null,
     totalTables: null,
+    hasPackages: false,
   },
   {
     id: "default-match-2",
@@ -200,6 +202,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     bookingEventId: null,
     availableTables: null,
     totalTables: null,
+    hasPackages: false,
   },
   {
     id: "default-match-3",
@@ -224,6 +227,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     bookingEventId: null,
     availableTables: null,
     totalTables: null,
+    hasPackages: false,
   },
   {
     id: "default-match-4",
@@ -249,6 +253,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     bookingEventId: null,
     availableTables: null,
     totalTables: null,
+    hasPackages: false,
   },
   {
     id: "default-match-5",
@@ -273,6 +278,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     bookingEventId: null,
     availableTables: null,
     totalTables: null,
+    hasPackages: false,
   },
   {
     id: "default-match-6",
@@ -298,6 +304,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     bookingEventId: null,
     availableTables: null,
     totalTables: null,
+    hasPackages: false,
   },
 ];
 
@@ -305,6 +312,7 @@ const DEFAULT_EVENTS: PublicEvent[] = [
   {
     id: "default-event-1",
     category: "LIVE_EVENT",
+    isWhatsappOnly: true,
     title: "Live Performance",
     artistName: "AGNES MONICA",
     talentLabel: "Talent",
@@ -326,6 +334,7 @@ const DEFAULT_EVENTS: PublicEvent[] = [
   {
     id: "default-event-2",
     category: "LIVE_EVENT",
+    isWhatsappOnly: true,
     title: "Match Night",
     artistName: "LUDO CROWD",
     talentLabel: "Talent",
@@ -404,7 +413,7 @@ const DEFAULT_FAQS: PublicFAQ[] = [
 ];
 
 type MatchCardWithBookingEvent = MatchCard & {
-  bookingEvent: (BookingEventModel & { tables: EventTable[] }) | null;
+  bookingEvent: (BookingEventModel & { tables: EventTable[]; packages: EventPackage[] }) | null;
 };
 
 type BookingEventWithTables = BookingEventModel & { tables: EventTable[] };
@@ -497,6 +506,7 @@ export default async function HomePage() {
             bookingEventId: match.bookingEventId,
             availableTables: match.bookingEvent ? availability.availableTables : null,
             totalTables: match.bookingEvent ? availability.totalTables : null,
+            hasPackages: (match.bookingEvent?.packages.length ?? 0) > 0,
           };
         })
       : DEFAULT_MATCHES;
@@ -505,9 +515,12 @@ export default async function HomePage() {
     events.length > 0
       ? events.map((event) => {
           const availability = computeAvailability(event.tables);
+          const isWhatsappOnly =
+            event.category === "LIVE_EVENT" || event.eventType === "REGULER_MATCH";
           return {
             id: event.id,
             category: event.category,
+            isWhatsappOnly,
             title: event.title,
             artistName: event.artistName ?? "",
             talentLabel: event.talentLabel ?? "",
@@ -524,8 +537,7 @@ export default async function HomePage() {
             headlineHighlight2: event.headlineHighlight2 ?? "",
             backgroundImage: event.backgroundImage,
             ctaLabel: event.ctaLabel,
-            whatsappMessage:
-              event.category === "LIVE_EVENT" ? event.whatsappMessage : null,
+            whatsappMessage: isWhatsappOnly ? event.whatsappMessage : null,
             availableTables: event.tables.length > 0 ? availability.availableTables : null,
             totalTables: event.tables.length > 0 ? availability.totalTables : null,
           };
@@ -624,6 +636,8 @@ export default async function HomePage() {
       <MatchSection
         title={publicSettings.matchSectionTitle}
         matches={publicMatches}
+        whatsappNumber={publicSettings.whatsappNumber}
+        defaultMessage={publicSettings.defaultWhatsappMessage}
       />
       <HeroSection
         heroes={publicHeroes}
@@ -663,12 +677,20 @@ async function getHomepageContent(): Promise<HomepageContent> {
           { sortOrder: "asc" },
           { createdAt: "desc" },
         ],
-        include: { bookingEvent: { include: { tables: true } } },
+        include: {
+          bookingEvent: {
+            include: {
+              tables: true,
+              packages: { where: { isActive: true } },
+            },
+          },
+        },
       }),
       prisma.bookingEvent.findMany({
         where: {
           isActive: true,
           eventType: { not: "DELIVERY_ORDER" },
+          matches: { none: {} },
           OR: [{ scheduledAt: null }, { scheduledAt: { gte: today } }],
         },
         orderBy: [

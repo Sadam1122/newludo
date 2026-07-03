@@ -41,6 +41,7 @@ export type PublicMatch = {
   bookingEventId: string | null;
   availableTables: number | null;
   totalTables: number | null;
+  hasPackages: boolean;
 };
 
 export type PublicHero = {
@@ -59,6 +60,7 @@ export type PublicHero = {
 export type PublicEvent = {
   id: string;
   category: "LIVE_EVENT" | "BOOKING_EVENT";
+  isWhatsappOnly: boolean;
   title: string;
   artistName: string;
   talentLabel: string;

@@ -206,7 +206,7 @@ export function EventBanner({
                 </InfoRow>
               </div>
 
-              {event.totalTables !== null && event.totalTables > 0 ? (
+              {!event.isWhatsappOnly && event.totalTables !== null && event.totalTables > 0 ? (
                 <p
                   className={cn(
                     "mt-4 inline-flex rounded-full px-3 py-1.5 text-xs font-black uppercase",
@@ -222,7 +222,7 @@ export function EventBanner({
               ) : null}
 
               <div className="relative z-30 mt-7 flex flex-wrap items-center gap-3 sm:mt-8">
-                {event.category === "LIVE_EVENT" ? (
+                {event.isWhatsappOnly ? (
                   <WhatsAppButton
                     phoneNumber={whatsappNumber}
                     message={event.whatsappMessage ?? defaultMessage}

@@ -403,7 +403,13 @@ export function EventForm({ event, nextSortOrder = 0 }: Props) {
             <li className="flex items-start gap-3">
               <Info className="mt-0.5 size-4 shrink-0 text-ludo-gold" />
               <p>
-                <b>REGULER_MATCH</b>, <b>BIG_MATCH</b>, <b>SUPER_BIG_MATCH</b>,
+                <b>REGULER_MATCH</b> hanya menampilkan tombol CTA WhatsApp — tidak ada pemilihan meja/package sama sekali.
+              </p>
+            </li>
+            <li className="flex items-start gap-3">
+              <Info className="mt-0.5 size-4 shrink-0 text-ludo-gold" />
+              <p>
+                <b>BIG_MATCH</b>, <b>SUPER_BIG_MATCH</b>,
                 dan <b>IFTAR_2027</b> menggunakan sistem layout meja penuh (VVIP, VIP, Reguler, Barstool).
               </p>
             </li>

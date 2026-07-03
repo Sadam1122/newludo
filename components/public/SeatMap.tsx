@@ -47,7 +47,7 @@ export function SeatMap({ tables, selectedTable, onSelectTable, perSeat = false 
           onClick={() => setIsZoomed(true)}
         >
           <Image
-            src="/layout-seat-v2.png"
+            src="/layout-seat-v3.png"
             alt="LUDO Seat Layout"
             fill
             className="object-contain transition-transform duration-500 hover:scale-105"
@@ -147,7 +147,7 @@ export function SeatMap({ tables, selectedTable, onSelectTable, perSeat = false 
           </button>
           <div className="relative h-[95vh] w-[95vw]">
             <Image
-              src="/layout-seat-v2.png"
+              src="/layout-seat-v3.png"
               alt="LUDO Seat Layout Zoomed"
               fill
               className="object-contain"

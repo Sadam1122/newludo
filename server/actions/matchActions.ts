@@ -33,7 +33,10 @@ async function provisionBookingEventForMatch(match: MatchCard) {
     data: {
       category: "BOOKING_EVENT",
       title,
-      eventType: "REGULER_MATCH",
+      // REGULER_MATCH is reserved as the "WhatsApp CTA only" template in the
+      // Events CMS, so auto-provisioned match events use BIG_MATCH instead to
+      // keep the full table + package payment flow.
+      eventType: "BIG_MATCH",
       eventDateLabel: match.matchDateLabel,
       eventTimeLabel: match.matchTimeLabel,
       scheduledAt: match.scheduledAt,

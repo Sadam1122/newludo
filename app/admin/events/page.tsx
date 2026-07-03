@@ -18,7 +18,10 @@ export default async function EventsPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   const events = await prisma.bookingEvent.findMany({
-    where: { eventType: { not: "DELIVERY_ORDER" } },
+    where: {
+      eventType: { not: "DELIVERY_ORDER" },
+      matches: { none: {} },
+    },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {
