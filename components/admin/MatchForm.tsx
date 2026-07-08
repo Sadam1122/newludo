@@ -192,10 +192,10 @@ export function MatchForm({
           required={false}
         />
         <FileField
-          label="Upload General Event Image"
+          label="Upload Poster / Event Image"
           name="eventImageFile"
           value={match?.eventImage}
-          tooltip="Optimal resolution: 1080x1080px (1:1/Square) or 1080x1350px (4:5/Portrait). Used if no teams are set."
+          tooltip="Optimal resolution: 1080x1350px (4:5/Portrait). This is also the poster shown on the booking payment page (/book/...) for Big Match, Super Big Match, Nobar, and Iftar categories."
         />
       </div>
 

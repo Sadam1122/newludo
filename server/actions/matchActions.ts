@@ -47,9 +47,20 @@ async function syncBookingEventForMatch(match: MatchCard) {
   }
 
   if (match.bookingEventId) {
+    // Keep the booking page in sync with the match every time it is saved
+    // (not just on first creation) — poster, title, date/time, and CTA label
+    // all come from the match, so an edit here must always propagate.
     await prisma.bookingEvent.update({
       where: { id: match.bookingEventId },
-      data: { eventType: match.matchCategory },
+      data: {
+        eventType: match.matchCategory,
+        title: buildBookingEventTitle(match),
+        eventDateLabel: match.matchDateLabel,
+        eventTimeLabel: match.matchTimeLabel,
+        scheduledAt: match.scheduledAt,
+        backgroundImage: match.eventImage,
+        ctaLabel: match.buttonLabel || "BOOK NOW",
+      },
     });
     await selfHealTables(match.bookingEventId);
     return match.bookingEventId;

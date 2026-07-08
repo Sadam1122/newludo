@@ -20,9 +20,8 @@ export function buildLudoTableLayout() {
   const vvip2 = generateRange("Vvip ", 4, 9, 9, "VVIP");
   const vvip3 = [{ tableCode: "Vvip 29", capacity: 9, tableType: "VVIP" as TableType }];
 
-  // VIP: Vip 12-15 (6 pax), Vip 19 (9 pax)
+  // VIP: Vip 12-15 (6 pax)
   const vip1 = generateRange("Vip ", 12, 15, 6, "VIP");
-  const vip2 = [{ tableCode: "Vip 19", capacity: 9, tableType: "VIP" as TableType }];
 
   // Reguler Indoor (4 pax): Table 10,11,16,17,18,19,20,21,22,23,24,25,26
   const regIndoorNumbers = [10, 11, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
@@ -55,7 +54,6 @@ export function buildLudoTableLayout() {
     ...vvip2,
     ...vvip3,
     ...vip1,
-    ...vip2,
     ...regIndoor,
     ...barstools,
     ...regOutdoor2,
