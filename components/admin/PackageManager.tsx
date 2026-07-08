@@ -21,6 +21,7 @@ const tableTypes = [
   "VIP",
   "REGULAR_INDOOR",
   "REGULAR_SEMI_OUTDOOR",
+  "REGULAR_SEMI_OUTDOOR_2P",
   "BARSTOOL",
   "DELIVERY",
 ] as const;

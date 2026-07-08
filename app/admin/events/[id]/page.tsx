@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { EventForm } from "@/components/admin/EventForm";
 import { PackageManager } from "@/components/admin/PackageManager";
@@ -25,11 +25,19 @@ export default async function EditEventPage({
       tables: {
         orderBy: [{ tableType: "asc" }, { tableCode: "asc" }],
       },
+      matches: { select: { id: true } },
     },
   });
 
   if (!event) {
     notFound();
+  }
+
+  // Match-linked events are managed from their own dedicated page so the
+  // Events CMS (category/template/headline fields) never collides with
+  // match-specific data (teams, match category) edited in the Matches CMS.
+  if (event.matches.length > 0) {
+    redirect(`/admin/matches/${event.matches[0].id}`);
   }
 
   return (

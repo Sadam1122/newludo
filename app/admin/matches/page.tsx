@@ -8,10 +8,19 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 import { MatchForm } from "@/components/admin/MatchForm";
 import { computeAvailability } from "@/lib/bookingAvailability";
+import { isWhatsappOnlyTemplate } from "@/lib/eventGating";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 import { deleteMatch, toggleMatchActive } from "@/server/actions/matchActions";
+
+const matchCategoryLabels: Record<string, string> = {
+  REGULER_MATCH: "Reguler Match",
+  BIG_MATCH: "Big Match",
+  SUPER_BIG_MATCH: "Super Big Match",
+  NOBAR_COMMUNITY: "Nobar With Community",
+  IFTAR_2027: "Iftar",
+};
 
 type PageProps = {
   searchParams?: Promise<{ success?: string; error?: string }>;
@@ -104,8 +113,11 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                               match.awayTeamName ?? "Away"
                             }`}
                       </p>
-                      <p className="mt-1 text-xs font-semibold uppercase text-white/35">
+                      <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-white/35">
                         {match.displayMode.replace("_", " ")}
+                        <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] font-black text-ludo-gold">
+                          {matchCategoryLabels[match.matchCategory] ?? match.matchCategory}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -131,7 +143,11 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                   ) : null}
                 </td>
                 <td className="px-4 py-4">
-                  {match.bookingEvent ? (
+                  {isWhatsappOnlyTemplate(match.matchCategory) ? (
+                    <span className="rounded-full border border-ludo-green/35 bg-ludo-green/10 px-2.5 py-1 text-xs font-black text-green-100">
+                      WHATSAPP ONLY
+                    </span>
+                  ) : match.bookingEvent ? (
                     (() => {
                       const availability = computeAvailability(match.bookingEvent!.tables);
                       return (
@@ -153,7 +169,7 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                             </p>
                           ) : null}
                           <Link
-                            href={`/admin/events/${match.bookingEvent!.id}`}
+                            href={`/admin/matches/${match.id}`}
                             className="mt-1 inline-block text-[10px] font-bold text-ludo-gold hover:underline"
                           >
                             Manage packages →

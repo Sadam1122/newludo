@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { BookingForm } from "@/components/public/BookingForm";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
 import { DEFAULT_WHATSAPP_MESSAGE, DEFAULT_WHATSAPP_NUMBER } from "@/lib/whatsapp";
+import { releaseExpiredReservations } from "@/lib/reservationExpiry";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,10 @@ type Props = {
 
 export default async function BookingPage({ params }: Props) {
   const { eventId } = await params;
+
+  // Lazy cleanup: release any table someone abandoned mid-checkout before we
+  // show live availability, so a stale hold never looks unavailable forever.
+  await releaseExpiredReservations(eventId);
 
   const event = await prisma.bookingEvent.findUnique({
     where: { 

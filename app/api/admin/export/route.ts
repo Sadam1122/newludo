@@ -87,11 +87,28 @@ export async function GET(req: Request) {
         "Total Harga": res.totalPrice,
         "Status Order": res.status,
         "Payment Method": res.paymentMethod || "-",
+        "Fraud Status": res.fraudStatus || "-",
         "Waktu Booking": new Date(res.createdAt).toLocaleString("id-ID"),
         "Waktu Expired": res.expiredAt ? new Date(res.expiredAt).toLocaleString("id-ID") : "-",
+        "Waktu Payment Success": res.paidAt ? new Date(res.paidAt).toLocaleString("id-ID") : "-",
         "Catatan": res.customerRequest || "-",
       };
     });
+
+    // 2b. Sheet: Detail Items (every order line, including a la carte add-ons
+    // that the primary Detail Transaksi sheet above only shows the first of)
+    const itemDetailData = reservations.flatMap((res) =>
+      res.orderItems.map((item) => ({
+        "Order ID": res.id,
+        "Status Order": res.status,
+        "Nama Customer": res.customerName,
+        "Item": item.eventPackage?.name || "-",
+        "Table Code": item.eventTable?.tableCode || "-",
+        "Quantity": item.quantity,
+        "Harga Satuan": item.price,
+        "Subtotal": item.price * item.quantity,
+      })),
+    );
 
     // 3. Sheet: Rekap Per Package
     const packageStats: Record<string, { count: number; paid: number; pending: number; rev: number }> = {};
@@ -154,12 +171,14 @@ export async function GET(req: Request) {
 
     const wsSummary = XLSX.utils.json_to_sheet(summaryData);
     const wsDetail = XLSX.utils.json_to_sheet(detailData);
+    const wsItems = XLSX.utils.json_to_sheet(itemDetailData);
     const wsPackage = XLSX.utils.json_to_sheet(packageData);
     const wsTable = XLSX.utils.json_to_sheet(tableData);
     const wsPayment = XLSX.utils.json_to_sheet(paymentData);
 
     XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
     XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Transaksi");
+    XLSX.utils.book_append_sheet(wb, wsItems, "Detail Items");
     XLSX.utils.book_append_sheet(wb, wsPackage, "Rekap Per Package");
     XLSX.utils.book_append_sheet(wb, wsTable, "Rekap Per Table");
     XLSX.utils.book_append_sheet(wb, wsPayment, "Rekap Payment Status");

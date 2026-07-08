@@ -24,8 +24,8 @@ export function buildLudoTableLayout() {
   const vip1 = generateRange("Vip ", 12, 15, 6, "VIP");
   const vip2 = [{ tableCode: "Vip 19", capacity: 9, tableType: "VIP" as TableType }];
 
-  // Reguler Indoor (4 pax): Table 16,17,18,20,21,22,23,24,25,26
-  const regIndoorNumbers = [16, 17, 18, 20, 21, 22, 23, 24, 25, 26];
+  // Reguler Indoor (4 pax): Table 10,11,16,17,18,19,20,21,22,23,24,25,26
+  const regIndoorNumbers = [10, 11, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
   const regIndoor = regIndoorNumbers.map((n) => ({
     tableCode: `Table ${n}`,
     capacity: 4,
@@ -39,8 +39,10 @@ export function buildLudoTableLayout() {
     tableType: "BARSTOOL" as TableType,
   }));
 
-  // Reguler Outdoor 2 pax: Table 32-35
-  const regOutdoor2 = generateRange("Table ", 32, 35, 2, "REGULAR_SEMI_OUTDOOR");
+  // Reguler Outdoor / Semi Outdoor 2 pax: Table 32-35 (own category, distinct
+  // from the 4 pax REGULAR_SEMI_OUTDOOR tables below, so packages can be
+  // filtered cleanly by table type instead of guessing off capacity).
+  const regOutdoor2 = generateRange("Table ", 32, 35, 2, "REGULAR_SEMI_OUTDOOR_2P");
 
   // Reguler Outdoor 4 pax: Table 31, 36-46
   const regOutdoor4 = [

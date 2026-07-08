@@ -31,6 +31,7 @@ import type {
   PublicSettings,
 } from "@/components/public/types";
 import { computeAvailability } from "@/lib/bookingAvailability";
+import { isWhatsappOnlyTemplate } from "@/lib/eventGating";
 import { prisma } from "@/lib/prisma";
 import { getJakartaStartOfToday, isUpcomingOrUndated } from "@/lib/schedule";
 import {
@@ -178,6 +179,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     availableTables: null,
     totalTables: null,
     hasPackages: false,
+    isWhatsappOnly: false,
   },
   {
     id: "default-match-2",
@@ -203,6 +205,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     availableTables: null,
     totalTables: null,
     hasPackages: false,
+    isWhatsappOnly: false,
   },
   {
     id: "default-match-3",
@@ -228,6 +231,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     availableTables: null,
     totalTables: null,
     hasPackages: false,
+    isWhatsappOnly: false,
   },
   {
     id: "default-match-4",
@@ -254,6 +258,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     availableTables: null,
     totalTables: null,
     hasPackages: false,
+    isWhatsappOnly: false,
   },
   {
     id: "default-match-5",
@@ -279,6 +284,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     availableTables: null,
     totalTables: null,
     hasPackages: false,
+    isWhatsappOnly: false,
   },
   {
     id: "default-match-6",
@@ -305,6 +311,7 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     availableTables: null,
     totalTables: null,
     hasPackages: false,
+    isWhatsappOnly: false,
   },
 ];
 
@@ -481,8 +488,10 @@ export default async function HomePage() {
   const publicMatches: PublicMatch[] =
     matches.length > 0
       ? matches.map((match) => {
-          const linkedTables = match.bookingEvent?.tables ?? [];
+          const isWhatsappOnly = isWhatsappOnlyTemplate(match.matchCategory);
+          const linkedTables = !isWhatsappOnly ? match.bookingEvent?.tables ?? [] : [];
           const availability = computeAvailability(linkedTables);
+          const hasLiveEvent = !isWhatsappOnly && Boolean(match.bookingEvent);
           return {
             id: match.id,
             displayMode: match.displayMode,
@@ -498,15 +507,16 @@ export default async function HomePage() {
             matchDateLabel: match.matchDateLabel,
             matchTimeLabel: match.matchTimeLabel,
             scheduledAt: match.scheduledAt?.toISOString() ?? null,
-            status: match.bookingEvent ? availability.status : match.status,
+            status: hasLiveEvent ? availability.status : match.status,
             buttonLabel: match.buttonLabel,
             subTextTitle: match.subTextTitle,
             whatsappMessage: match.whatsappMessage,
             showSoldOutStamp: match.showSoldOutStamp,
-            bookingEventId: match.bookingEventId,
-            availableTables: match.bookingEvent ? availability.availableTables : null,
-            totalTables: match.bookingEvent ? availability.totalTables : null,
-            hasPackages: (match.bookingEvent?.packages.length ?? 0) > 0,
+            bookingEventId: isWhatsappOnly ? null : match.bookingEventId,
+            availableTables: hasLiveEvent ? availability.availableTables : null,
+            totalTables: hasLiveEvent ? availability.totalTables : null,
+            hasPackages: hasLiveEvent && (match.bookingEvent?.packages.length ?? 0) > 0,
+            isWhatsappOnly,
           };
         })
       : DEFAULT_MATCHES;
@@ -516,7 +526,7 @@ export default async function HomePage() {
       ? events.map((event) => {
           const availability = computeAvailability(event.tables);
           const isWhatsappOnly =
-            event.category === "LIVE_EVENT" || event.eventType === "REGULER_MATCH";
+            event.category === "LIVE_EVENT" || isWhatsappOnlyTemplate(event.eventType);
           return {
             id: event.id,
             category: event.category,

@@ -21,9 +21,20 @@ export const matchStatusSchema = z.enum([
 
 export const matchDisplayModeSchema = z.enum(["TEAM_MATCH", "GENERAL_EVENT"]);
 
+// Subset of EventTemplate that makes sense for a match: DELIVERY_ORDER is
+// never selectable here (that is its own dedicated singleton flow).
+export const matchCategorySchema = z.enum([
+  "REGULER_MATCH",
+  "BIG_MATCH",
+  "SUPER_BIG_MATCH",
+  "NOBAR_COMMUNITY",
+  "IFTAR_2027",
+]);
+
 export const matchSchema = z
   .object({
     displayMode: matchDisplayModeSchema,
+    matchCategory: matchCategorySchema,
     leagueName: requiredText("League name"),
     title: optionalText,
     categoryLabel: optionalText,
@@ -35,6 +46,7 @@ export const matchSchema = z
     awayTeamLogo: optionalText,
     matchDateLabel: requiredText("Date label"),
     matchTimeLabel: requiredText("Time label"),
+    venueLocation: optionalText,
     scheduledAt: z.date().nullable(),
     status: matchStatusSchema,
     buttonLabel: requiredText("Button label"),

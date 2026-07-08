@@ -43,6 +43,11 @@ model SiteSetting {
 model MatchCard {
   id               String           @id @default(cuid())
   displayMode      MatchDisplayMode @default(TEAM_MATCH)
+  // Mirrors BookingEvent.eventType (same EventTemplate enum, reused on purpose):
+  // REGULER_MATCH = WhatsApp CTA only (no BookingEvent provisioned).
+  // BIG_MATCH / SUPER_BIG_MATCH / IFTAR_2027 = full table + package payment flow.
+  // NOBAR_COMMUNITY = per-seat payment flow.
+  matchCategory    EventTemplate    @default(BIG_MATCH)
   leagueName       String
   title            String?
   categoryLabel    String?
@@ -54,6 +59,7 @@ model MatchCard {
   awayTeamLogo     String?
   matchDateLabel   String
   matchTimeLabel   String
+  venueLocation    String?
   scheduledAt      DateTime?
   status           MatchStatus
   buttonLabel      String
@@ -268,7 +274,9 @@ model Reservation {
   snapToken           String?
   transactionId       String?            @unique
   paymentMethod       String?
+  fraudStatus         String?
   paymentCallbackData String?            @db.Text
+  paidAt              DateTime?
   expiredAt           DateTime?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
@@ -311,6 +319,10 @@ enum TableType {
   VIP
   REGULAR_INDOOR
   REGULAR_SEMI_OUTDOOR
+  // Separate from REGULAR_SEMI_OUTDOOR (4 pax) so packages can be filtered
+  // cleanly by table type without guessing off capacity. 2-pax outdoor tables
+  // (32-35) use this value.
+  REGULAR_SEMI_OUTDOOR_2P
   BARSTOOL
   DELIVERY
 }

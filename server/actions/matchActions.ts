@@ -15,6 +15,7 @@ import {
 import { idSchema, matchSchema } from "@/lib/validations";
 import { saveUploadedImage } from "@/lib/upload";
 import { buildLudoTableLayout } from "@/lib/tableLayout";
+import { isWhatsappOnlyTemplate } from "@/lib/eventGating";
 import type { MatchCard } from "@prisma/client";
 import {
   getActionErrorMessage,
@@ -23,20 +24,42 @@ import {
 
 const adminPath = "/admin/matches";
 
-async function provisionBookingEventForMatch(match: MatchCard) {
-  const title =
-    match.displayMode === "GENERAL_EVENT"
-      ? match.title ?? match.leagueName
-      : `${match.homeTeamName ?? "Home"} vs ${match.awayTeamName ?? "Away"}`;
+function buildBookingEventTitle(match: MatchCard) {
+  return match.displayMode === "GENERAL_EVENT"
+    ? match.title ?? match.leagueName
+    : `${match.homeTeamName ?? "Home"} vs ${match.awayTeamName ?? "Away"}`;
+}
+
+/**
+ * Ensures the BookingEvent backing a match matches its matchCategory:
+ * - REGULER_MATCH: no BookingEvent needed (WhatsApp CTA only). Any existing
+ *   linked event is left untouched (non-destructive) but is no longer used
+ *   for the public CTA once matchCategory says WhatsApp-only.
+ * - Anything else: creates a BookingEvent + generates tables on first save,
+ *   or updates the eventType in place on an existing linked event so a
+ *   category change (e.g. Big Match -> Nobar With Community) never loses
+ *   already-configured tables/packages. Tables are also self-healed to pick
+ *   up any layout additions (e.g. newly added Table 10/11/19).
+ */
+async function syncBookingEventForMatch(match: MatchCard) {
+  if (isWhatsappOnlyTemplate(match.matchCategory)) {
+    return match.bookingEventId;
+  }
+
+  if (match.bookingEventId) {
+    await prisma.bookingEvent.update({
+      where: { id: match.bookingEventId },
+      data: { eventType: match.matchCategory },
+    });
+    await selfHealTables(match.bookingEventId);
+    return match.bookingEventId;
+  }
 
   const bookingEvent = await prisma.bookingEvent.create({
     data: {
       category: "BOOKING_EVENT",
-      title,
-      // REGULER_MATCH is reserved as the "WhatsApp CTA only" template in the
-      // Events CMS, so auto-provisioned match events use BIG_MATCH instead to
-      // keep the full table + package payment flow.
-      eventType: "BIG_MATCH",
+      title: buildBookingEventTitle(match),
+      eventType: match.matchCategory,
       eventDateLabel: match.matchDateLabel,
       eventTimeLabel: match.matchTimeLabel,
       scheduledAt: match.scheduledAt,
@@ -46,16 +69,7 @@ async function provisionBookingEventForMatch(match: MatchCard) {
     },
   });
 
-  const layout = buildLudoTableLayout();
-  await prisma.eventTable.createMany({
-    data: layout.map((t) => ({
-      bookingEventId: bookingEvent.id,
-      tableCode: t.tableCode,
-      capacity: t.capacity,
-      tableType: t.tableType,
-      status: "AVAILABLE",
-    })),
-  });
+  await selfHealTables(bookingEvent.id);
 
   await prisma.matchCard.update({
     where: { id: match.id },
@@ -65,9 +79,37 @@ async function provisionBookingEventForMatch(match: MatchCard) {
   return bookingEvent.id;
 }
 
+async function selfHealTables(bookingEventId: string) {
+  const layout = buildLudoTableLayout();
+
+  for (const t of layout) {
+    const existing = await prisma.eventTable.findUnique({
+      where: {
+        bookingEventId_tableCode: {
+          bookingEventId,
+          tableCode: t.tableCode,
+        },
+      },
+    });
+
+    if (!existing) {
+      await prisma.eventTable.create({
+        data: {
+          bookingEventId,
+          tableCode: t.tableCode,
+          capacity: t.capacity,
+          tableType: t.tableType,
+          status: "AVAILABLE",
+        },
+      });
+    }
+  }
+}
+
 async function buildMatchData(formData: FormData) {
   const parsed = matchSchema.parse({
     displayMode: getFormString(formData, "displayMode", "TEAM_MATCH"),
+    matchCategory: getFormString(formData, "matchCategory", "BIG_MATCH"),
     leagueName: getFormString(formData, "leagueName"),
     title: getFormOptionalString(formData, "title"),
     categoryLabel: getFormOptionalString(formData, "categoryLabel"),
@@ -79,6 +121,7 @@ async function buildMatchData(formData: FormData) {
     awayTeamLogo: getFormOptionalString(formData, "awayTeamLogo"),
     matchDateLabel: getFormString(formData, "matchDateLabel"),
     matchTimeLabel: getFormString(formData, "matchTimeLabel"),
+    venueLocation: getFormOptionalString(formData, "venueLocation"),
     scheduledAt: getFormDate(formData, "scheduledAt"),
     status: getFormString(formData, "status"),
     buttonLabel: getFormString(formData, "buttonLabel"),
@@ -117,9 +160,7 @@ export async function createMatch(formData: FormData) {
   try {
     const data = await buildMatchData(formData);
     const match = await prisma.matchCard.create({ data });
-    // Every match automatically gets its own bookable event (tables + payment flow)
-    // so the public "BOOK" button never falls back to "Coming Soon".
-    await provisionBookingEventForMatch(match);
+    await syncBookingEventForMatch(match);
     revalidatePath("/");
     revalidatePath(adminPath);
   } catch (error) {
@@ -136,11 +177,7 @@ export async function updateMatch(formData: FormData) {
     const id = idSchema.parse(getFormString(formData, "id"));
     const data = await buildMatchData(formData);
     const match = await prisma.matchCard.update({ where: { id }, data });
-
-    if (!match.bookingEventId) {
-      // Self-heal legacy matches that predate auto-provisioning.
-      await provisionBookingEventForMatch(match);
-    }
+    await syncBookingEventForMatch(match);
 
     revalidatePath("/");
     revalidatePath(adminPath);

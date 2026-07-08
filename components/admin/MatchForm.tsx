@@ -10,6 +10,34 @@ const displayModes = [
   { value: "GENERAL_EVENT", label: "General Event / Broadcast" },
 ] as const;
 
+const matchCategories = [
+  {
+    value: "REGULER_MATCH",
+    label: "Reguler Match",
+    hint: "WhatsApp only. No table/payment flow.",
+  },
+  {
+    value: "BIG_MATCH",
+    label: "Big Match",
+    hint: "Payment gateway with table booking.",
+  },
+  {
+    value: "SUPER_BIG_MATCH",
+    label: "Super Big Match",
+    hint: "Payment gateway with table booking.",
+  },
+  {
+    value: "NOBAR_COMMUNITY",
+    label: "Nobar With Community",
+    hint: "Payment gateway, sold per seat/kursi.",
+  },
+  {
+    value: "IFTAR_2027",
+    label: "Iftar",
+    hint: "Payment gateway with table booking.",
+  },
+] as const;
+
 export function MatchForm({
   match,
   nextSortOrder,
@@ -28,6 +56,23 @@ export function MatchForm({
       {match ? <input type="hidden" name="id" value={match.id} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
+        <label className="block">
+          <FormFieldLabel>
+            Match Category
+            <InfoTooltip info="Reguler Match = WhatsApp CTA only. Big Match / Super Big Match / Iftar = full table + package payment flow. Nobar With Community = per-seat payment flow. This drives which booking flow gets provisioned automatically." />
+          </FormFieldLabel>
+          <select
+            name="matchCategory"
+            defaultValue={match?.matchCategory ?? "BIG_MATCH"}
+            className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
+          >
+            {matchCategories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label} — {cat.hint}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="block">
           <FormFieldLabel>Display Mode</FormFieldLabel>
           <select
@@ -88,6 +133,13 @@ export function MatchForm({
           name="scheduledAt"
           type="datetime-local"
           defaultValue={toDateTimeLocal(match?.scheduledAt)}
+          required={false}
+        />
+        <Field
+          label="Venue / Location"
+          name="venueLocation"
+          defaultValue={match?.venueLocation ?? ""}
+          placeholder="LUDO Sports Kitchen & Coffee, Bandung"
           required={false}
         />
         <input type="hidden" name="status" value={match?.status ?? "BOOK"} />

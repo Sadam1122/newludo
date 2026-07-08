@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookingEvent, EventPackage, EventTable } from "@prisma/client";
-import { Check, Minus, Plus } from "lucide-react";
+import { AlertTriangle, Check, Minus, Plus } from "lucide-react";
 import { DELIVERY_CATEGORIES, DeliveryCategoryKey } from "@/lib/deliveryCategories";
 import { computeOrderTotals } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,20 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
   const [memberPassword, setMemberPassword] = useState("");
   const [alaCarteCart, setAlaCarteCart] = useState<Record<string, number>>({});
   const [seatQuantity, setSeatQuantity] = useState(1);
+  const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!holdExpiresAt) return;
+
+    const tick = () => {
+      const diff = Math.max(0, Math.round((holdExpiresAt - Date.now()) / 1000));
+      setRemainingSeconds(diff);
+    };
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [holdExpiresAt]);
 
   const isDeliveryOrder = event.eventType === "DELIVERY_ORDER";
   const isSeatBased = event.eventType === "NOBAR_COMMUNITY";
@@ -147,6 +161,10 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Checkout failed");
+
+      if (data.expiredAt) {
+        setHoldExpiresAt(new Date(data.expiredAt).getTime());
+      }
 
       // Load snap script and trigger popup
       if (typeof window !== "undefined" && (window as any).snap) {
@@ -277,7 +295,18 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
           </h2>
 
           {matchingPackages.length === 0 ? (
-            <p className="text-zinc-400">No packages available for this selection.</p>
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-white/15 bg-black/20 p-8 text-center">
+              <AlertTriangle className="size-8 text-ludo-gold" />
+              <p className="font-bold text-white">
+                {selectedTable
+                  ? `No packages available yet for ${selectedTable.tableType.replace(/_/g, " ")}.`
+                  : "No packages available for this selection."}
+              </p>
+              <p className="max-w-sm text-sm text-zinc-400">
+                This table type does not have a package configured yet. Please pick another table,
+                or contact us on WhatsApp and our team will help you complete this booking directly.
+              </p>
+            </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {matchingPackages.map((pkg) => {
@@ -532,9 +561,23 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                 </span>
               </div>
             </div>
+            {remainingSeconds !== null && (
+              <div
+                className={cn(
+                  "mb-4 rounded-lg border px-4 py-2 text-center text-sm font-bold",
+                  remainingSeconds > 0
+                    ? "border-ludo-gold/40 bg-ludo-gold/10 text-ludo-gold"
+                    : "border-ludo-red/40 bg-ludo-red/10 text-ludo-red",
+                )}
+              >
+                {remainingSeconds > 0
+                  ? `Complete payment within ${formatCountdown(remainingSeconds)} or your table will be released.`
+                  : "Your hold has expired. Please refresh this page and select your table again."}
+              </div>
+            )}
             <button
               type="submit"
-              disabled={isSubmitting || !meetsMinimum}
+              disabled={isSubmitting || !meetsMinimum || remainingSeconds === 0}
               className="h-14 w-full rounded-full bg-[linear-gradient(90deg,#EF1F28,#F7C600)] text-lg font-black uppercase text-white shadow-[0_14px_34px_rgba(239,31,40,0.24)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(247,198,0,0.3)] disabled:opacity-50 disabled:hover:translate-y-0"
             >
               {isSubmitting ? "Processing Checkout..." : "Pay Now"}
@@ -547,6 +590,12 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
       )}
     </form>
   );
+}
+
+function formatCountdown(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function FilterChip({

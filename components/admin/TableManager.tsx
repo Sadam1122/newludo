@@ -55,6 +55,7 @@ export function TableManager({ bookingEventId, tables }: Props) {
     "VIP",
     "REGULAR_INDOOR",
     "BARSTOOL",
+    "REGULAR_SEMI_OUTDOOR_2P",
     "REGULAR_SEMI_OUTDOOR",
     "DELIVERY",
   ];

@@ -42,6 +42,7 @@ export type PublicMatch = {
   availableTables: number | null;
   totalTables: number | null;
   hasPackages: boolean;
+  isWhatsappOnly: boolean;
 };
 
 export type PublicHero = {
