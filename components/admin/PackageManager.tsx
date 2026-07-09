@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { EventPackage } from "@prisma/client";
-import { Trash2 } from "lucide-react";
+import { PackageX, RotateCcw, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { AdminCard } from "./AdminCard";
 import { ActiveStatusBadge } from "./ActiveStatusBadge";
@@ -12,6 +12,7 @@ import { DELIVERY_CATEGORIES, DeliveryCategoryKey } from "@/lib/deliveryCategori
 import {
   createEventPackage,
   deleteEventPackage,
+  toggleEventPackageSoldOut,
   updateEventPackage,
 } from "@/server/actions/eventPackageActions";
 
@@ -44,6 +45,13 @@ export function PackageManager({ bookingEventId, packages, mode = "event" }: Pro
     }
   };
 
+  const handleToggleSoldOut = (id: string) => {
+    startTransition(async () => {
+      const result = await toggleEventPackageSoldOut(id, bookingEventId);
+      if (result.error) alert(result.error);
+    });
+  };
+
   return (
     <AdminCard title={`${isDelivery ? "Menu Items" : "Packages"} (${packages.length})`}>
       <div className="space-y-6">
@@ -71,6 +79,12 @@ export function PackageManager({ bookingEventId, packages, mode = "event" }: Pro
                       <p className="flex items-center gap-2 font-bold text-white">
                         {pkg.name}
                         {!pkg.isActive && <ActiveStatusBadge active={pkg.isActive} />}
+                        {pkg.isSoldOut && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-ludo-red/40 bg-ludo-red/15 px-2.5 py-1 text-xs font-black uppercase text-red-100">
+                            <PackageX className="h-3.5 w-3.5" aria-hidden="true" />
+                            Sold Out
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs text-zinc-400">
                         {isDelivery
@@ -83,13 +97,32 @@ export function PackageManager({ bookingEventId, packages, mode = "event" }: Pro
                       ) : null}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(pkg.id)}
-                    disabled={isPending}
-                    className="rounded p-2 text-zinc-500 hover:bg-zinc-800 hover:text-red-500"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => handleToggleSoldOut(pkg.id)}
+                      disabled={isPending}
+                      title={pkg.isSoldOut ? "Mark as available again" : "Mark as sold out"}
+                      className={
+                        pkg.isSoldOut
+                          ? "inline-flex h-9 items-center gap-1.5 rounded-lg border border-ludo-green/35 bg-ludo-green/10 px-3 text-xs font-black uppercase text-green-100 transition hover:bg-ludo-green hover:text-ludo-black disabled:opacity-50"
+                          : "inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/15 px-3 text-xs font-black uppercase text-zinc-400 transition hover:border-ludo-red/40 hover:text-red-400 disabled:opacity-50"
+                      }
+                    >
+                      {pkg.isSoldOut ? (
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                      ) : (
+                        <PackageX className="h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {pkg.isSoldOut ? "Restock" : "Sold Out"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(pkg.id)}
+                      disabled={isPending}
+                      className="rounded p-2 text-zinc-500 hover:bg-zinc-800 hover:text-red-500"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <details className="mt-3">
@@ -249,15 +282,26 @@ function PackageForm({
       </label>
 
       {isEditing ? (
-        <label className="inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-semibold text-white/75">
-          <input
-            type="checkbox"
-            name="isActive"
-            defaultChecked={pkg?.isActive ?? true}
-            className="h-4 w-4 rounded border-white/20 bg-ludo-black accent-ludo-gold"
-          />
-          Active (visible to customers)
-        </label>
+        <div className="flex flex-wrap gap-4">
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-semibold text-white/75">
+            <input
+              type="checkbox"
+              name="isActive"
+              defaultChecked={pkg?.isActive ?? true}
+              className="h-4 w-4 rounded border-white/20 bg-ludo-black accent-ludo-gold"
+            />
+            Active (visible to customers)
+          </label>
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-semibold text-white/75">
+            <input
+              type="checkbox"
+              name="isSoldOut"
+              defaultChecked={pkg?.isSoldOut ?? false}
+              className="h-4 w-4 rounded border-white/20 bg-ludo-black accent-ludo-red"
+            />
+            Sold Out (visible, but can&apos;t be ordered)
+          </label>
+        </div>
       ) : null}
 
       <div className="flex justify-end">

@@ -68,6 +68,7 @@ export async function updateEventPackage(formData: FormData) {
     const category = categoryRaw ? (categoryRaw as DeliveryCategory) : null;
     const subCategory = getFormOptionalString(formData, "subCategory");
     const isActive = getFormBoolean(formData, "isActive");
+    const isSoldOut = getFormBoolean(formData, "isSoldOut");
 
     const posterFile = getFormFile(formData, "posterFile");
     let posterImage: string | undefined;
@@ -87,8 +88,34 @@ export async function updateEventPackage(formData: FormData) {
         category,
         subCategory,
         isActive,
+        isSoldOut,
         ...(posterImage ? { posterImage } : {}),
       },
+    });
+
+    revalidatePath("/");
+    revalidatePath(`${adminPath}/${bookingEventId}`);
+    revalidatePath("/admin/delivery-order");
+    revalidatePath("/delivery-order");
+    return { success: true };
+  } catch (error) {
+    return { error: getActionErrorMessage(error) };
+  }
+}
+
+export async function toggleEventPackageSoldOut(id: string, bookingEventId: string) {
+  try {
+    await requireAdminSession();
+
+    const pkg = await prisma.eventPackage.findUnique({
+      where: { id },
+      select: { isSoldOut: true },
+    });
+    if (!pkg) throw new Error("Item not found.");
+
+    await prisma.eventPackage.update({
+      where: { id },
+      data: { isSoldOut: !pkg.isSoldOut },
     });
 
     revalidatePath("/");

@@ -353,30 +353,50 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
             <div className="grid gap-4 sm:grid-cols-2">
               {matchingPackages.map((pkg) => {
                 const isSelected = selectedPackage?.id === pkg.id;
+                const isSoldOut = pkg.isSoldOut;
                 return (
                   <button
                     type="button"
                     key={pkg.id}
-                    onClick={() => setSelectedPackage(pkg)}
+                    disabled={isSoldOut}
+                    onClick={() => !isSoldOut && setSelectedPackage(pkg)}
                     className={cn(
                       "relative flex flex-col items-start overflow-hidden rounded-xl border text-left transition-all",
-                      isSelected
-                        ? "border-ludo-gold bg-ludo-gold/10 shadow-[0_0_20px_rgba(247,198,0,0.15)]"
-                        : "border-white/10 bg-black/20 hover:border-white/30"
+                      isSoldOut
+                        ? "cursor-not-allowed border-white/10 bg-black/20 opacity-50"
+                        : isSelected
+                          ? "border-ludo-gold bg-ludo-gold/10 shadow-[0_0_20px_rgba(247,198,0,0.15)]"
+                          : "border-white/10 bg-black/20 hover:border-white/30"
                     )}
                   >
                     {pkg.posterImage && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={pkg.posterImage}
-                        alt={pkg.name}
-                        className="h-auto w-full"
-                      />
+                      <div className="relative w-full">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={pkg.posterImage}
+                          alt={pkg.name}
+                          className={cn("h-auto w-full", isSoldOut && "grayscale")}
+                        />
+                        {isSoldOut && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <span className="rounded-full border border-ludo-red/50 bg-ludo-red/20 px-3 py-1 text-xs font-black uppercase text-red-100">
+                              Sold Out
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     )}
                     <div className="flex w-full flex-col p-5">
                       <div className="flex w-full items-start justify-between">
                         <div>
-                          <h3 className="font-bold text-white">{pkg.name}</h3>
+                          <h3 className="font-bold text-white">
+                            {pkg.name}
+                            {isSoldOut && !pkg.posterImage && (
+                              <span className="ml-2 rounded-full border border-ludo-red/50 bg-ludo-red/20 px-2 py-0.5 text-[10px] font-black uppercase text-red-100">
+                                Sold Out
+                              </span>
+                            )}
+                          </h3>
                           <p className="text-sm text-zinc-400">
                             {isDeliveryOrder
                               ? [pkg.category, pkg.subCategory].filter(Boolean).join(" • ")
@@ -386,7 +406,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                             <p className="mt-1 text-xs text-zinc-500">{pkg.description}</p>
                           )}
                         </div>
-                        {isSelected && (
+                        {isSelected && !isSoldOut && (
                           <div className="rounded-full bg-ludo-gold p-1 text-black">
                             <Check className="size-3" />
                           </div>
@@ -427,10 +447,14 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
           <div className="grid gap-3 sm:grid-cols-2">
             {alaCarteMenu.map((item) => {
               const qty = alaCarteCart[item.id] ?? 0;
+              const isSoldOut = item.isSoldOut;
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4"
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4",
+                    isSoldOut && "opacity-50",
+                  )}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5">
@@ -439,7 +463,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                         <img
                           src={item.posterImage}
                           alt={item.name}
-                          className="h-full w-full object-cover"
+                          className={cn("h-full w-full object-cover", isSoldOut && "grayscale")}
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
@@ -457,24 +481,30 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                       </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => adjustAlaCarteQty(item.id, -1)}
-                      disabled={qty === 0}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white disabled:opacity-30"
-                    >
-                      <Minus className="size-3.5" />
-                    </button>
-                    <span className="w-5 text-center text-sm font-bold text-white">{qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => adjustAlaCarteQty(item.id, 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white hover:border-ludo-gold"
-                    >
-                      <Plus className="size-3.5" />
-                    </button>
-                  </div>
+                  {isSoldOut ? (
+                    <span className="shrink-0 rounded-full border border-ludo-red/50 bg-ludo-red/20 px-3 py-1 text-xs font-black uppercase text-red-100">
+                      Sold Out
+                    </span>
+                  ) : (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => adjustAlaCarteQty(item.id, -1)}
+                        disabled={qty === 0}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white disabled:opacity-30"
+                      >
+                        <Minus className="size-3.5" />
+                      </button>
+                      <span className="w-5 text-center text-sm font-bold text-white">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => adjustAlaCarteQty(item.id, 1)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white hover:border-ludo-gold"
+                      >
+                        <Plus className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

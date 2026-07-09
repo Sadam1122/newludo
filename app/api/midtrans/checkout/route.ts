@@ -29,6 +29,12 @@ export async function POST(req: Request) {
     if (!eventPackage) {
       return NextResponse.json({ message: "Package not found" }, { status: 404 });
     }
+    if (eventPackage.isSoldOut) {
+      return NextResponse.json(
+        { message: `${eventPackage.name} is sold out. Please choose another item.` },
+        { status: 409 },
+      );
+    }
 
     const bookingEvent = await prisma.bookingEvent.findUnique({
       where: { id: eventId },
@@ -60,6 +66,7 @@ export async function POST(req: Request) {
       alaCarteLines = requestedAlaCarte.map((item) => {
         const pkg = alaCartePackages.find((p) => p.id === item.packageId);
         if (!pkg) throw new Error("One of the selected menu items is no longer available.");
+        if (pkg.isSoldOut) throw new Error(`${pkg.name} is sold out. Please remove it from your order.`);
         return { eventPackage: pkg, quantity: Number(item.quantity) };
       });
     }
