@@ -336,6 +336,7 @@ model Member {
   id              String   @id @default(cuid())
   username        String   @unique
   passwordHash    String
+  category        String?
   discountPercent Float    @default(0)
   benefitNote     String?  @db.Text
   isActive        Boolean  @default(true)

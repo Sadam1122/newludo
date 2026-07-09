@@ -49,6 +49,20 @@ export function MemberForm({ member }: MemberFormProps) {
 
       <label className="block">
         <FormFieldLabel required={false}>
+          Category
+          <InfoTooltip info="Free-text label to group members (e.g. VIP, Corporate, Influencer). Not shown to customers." />
+        </FormFieldLabel>
+        <input
+          name="category"
+          type="text"
+          defaultValue={member?.category ?? ""}
+          placeholder="e.g. VIP, Corporate, Influencer"
+          className="h-11 w-full min-w-0 rounded border border-white/10 bg-ludo-black px-3 text-white outline-none focus:border-ludo-gold"
+        />
+      </label>
+
+      <label className="block">
+        <FormFieldLabel required={false}>
           Benefit Note
           <InfoTooltip info="Shown to customers as the member benefit description at checkout." />
         </FormFieldLabel>

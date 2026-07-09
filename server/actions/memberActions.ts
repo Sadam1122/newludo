@@ -17,6 +17,7 @@ const adminPath = "/admin/members";
 function buildMemberData(formData: FormData) {
   return memberSchema.parse({
     username: getFormString(formData, "username"),
+    category: getFormString(formData, "category") || null,
     discountPercent: getFormNumber(formData, "discountPercent"),
     benefitNote: getFormString(formData, "benefitNote") || null,
     isActive: getFormBoolean(formData, "isActive"),

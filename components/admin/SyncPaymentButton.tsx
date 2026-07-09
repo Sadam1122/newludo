@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { RefreshCw } from "lucide-react";
 
+import { InfoTooltip } from "./InfoTooltip";
 import { syncPaymentStatus } from "@/server/actions/paymentActions";
 
 type Props = {
@@ -36,6 +37,7 @@ export function SyncPaymentButton({ reservationId, bookingEventId }: Props) {
       >
         <RefreshCw className={isPending ? "size-3.5 animate-spin" : "size-3.5"} />
         {isPending ? "Syncing..." : "Sync Payment Status"}
+        <InfoTooltip info="Status updates automatically via the Midtrans webhook. Only use this as a manual fallback if a payment shows PENDING here but is already paid in Midtrans." />
       </button>
       {lastResult ? (
         <span className="text-[10px] font-semibold text-zinc-400">{lastResult}</span>

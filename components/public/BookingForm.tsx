@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BookingEvent, EventPackage, EventTable } from "@prisma/client";
-import { AlertTriangle, Check, Minus, Plus } from "lucide-react";
+import { AlertTriangle, Check, Minus, Plus, UtensilsCrossed } from "lucide-react";
 import { DELIVERY_CATEGORIES, DeliveryCategoryKey } from "@/lib/deliveryCategories";
 import { computeOrderTotals } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
@@ -390,14 +390,30 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                   key={item.id}
                   className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-bold text-white">{item.name}</p>
-                    <p className="text-xs text-zinc-400">
-                      {[item.category, item.subCategory].filter(Boolean).join(" • ")}
-                    </p>
-                    <p className="mt-1 text-sm font-black text-ludo-gold">
-                      IDR {item.price.toLocaleString()}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5">
+                      {item.posterImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.posterImage}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <UtensilsCrossed className="size-5 text-zinc-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-bold text-white">{item.name}</p>
+                      <p className="text-xs text-zinc-400">
+                        {[item.category, item.subCategory].filter(Boolean).join(" • ")}
+                      </p>
+                      <p className="mt-1 text-sm font-black text-ludo-gold">
+                        IDR {item.price.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <button

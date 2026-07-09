@@ -166,6 +166,7 @@ export const eventCategorySchema = z.enum(["LIVE_EVENT", "BOOKING_EVENT"]);
 
 export const memberSchema = z.object({
   username: requiredText("Username"),
+  category: optionalText,
   discountPercent: z
     .number()
     .min(0, "Discount must be 0 or higher")

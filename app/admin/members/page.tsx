@@ -51,6 +51,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
           <thead className="bg-white/[0.055] text-xs uppercase text-white/50">
             <tr>
               <th className="px-4 py-3">Username</th>
+              <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Discount</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Actions</th>
@@ -79,6 +80,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
                     </div>
                   </details>
                 </td>
+                <td className="px-4 py-4 text-white/70">{member.category || "-"}</td>
                 <td className="px-4 py-4 text-white/70">{member.discountPercent}%</td>
                 <td className="px-4 py-4">
                   <ActiveStatusBadge
