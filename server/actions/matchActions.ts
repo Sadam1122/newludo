@@ -214,6 +214,40 @@ export async function deleteMatch(formData: FormData) {
   redirectWithMessage(adminPath, "success", "Match deleted.");
 }
 
+/**
+ * Narrow update for the fields that live on the linked BookingEvent but are
+ * not driven by the match itself (Gate Open info, Table Details text shown
+ * on the booking page, and the Delivery Order a la carte add-on toggle).
+ * Kept separate from EventForm/updateEvent so it never touches the fields
+ * the match sync owns (title, eventType, dates, poster, CTA label).
+ */
+export async function updateMatchBookingDetails(formData: FormData) {
+  await requireAdminSession();
+
+  const matchId = idSchema.parse(getFormString(formData, "matchId"));
+  const matchPath = `${adminPath}/${matchId}`;
+
+  try {
+    const bookingEventId = idSchema.parse(getFormString(formData, "bookingEventId"));
+
+    await prisma.bookingEvent.update({
+      where: { id: bookingEventId },
+      data: {
+        openGateInfo: getFormOptionalString(formData, "openGateInfo"),
+        tableInfo: getFormOptionalString(formData, "tableInfo"),
+        allowAlaCarte: getFormBoolean(formData, "allowAlaCarte"),
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath(matchPath);
+  } catch (error) {
+    redirectWithMessage(matchPath, "error", getActionErrorMessage(error));
+  }
+
+  redirectWithMessage(matchPath, "success", "Booking page details updated.");
+}
+
 export async function toggleMatchActive(formData: FormData) {
   await requireAdminSession();
 

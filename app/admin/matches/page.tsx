@@ -1,4 +1,4 @@
-import { ToggleLeft, ToggleRight } from "lucide-react";
+import { Settings2, ToggleLeft, ToggleRight } from "lucide-react";
 import Link from "next/link";
 
 import { ActiveStatusBadge } from "@/components/admin/ActiveStatusBadge";
@@ -168,12 +168,6 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                               No packages yet — showing WhatsApp
                             </p>
                           ) : null}
-                          <Link
-                            href={`/admin/matches/${match.id}`}
-                            className="mt-1 inline-block text-[10px] font-bold text-ludo-gold hover:underline"
-                          >
-                            Manage packages →
-                          </Link>
                         </>
                       );
                     })()
@@ -197,6 +191,15 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex flex-wrap gap-2">
+                    {!isWhatsappOnlyTemplate(match.matchCategory) && match.bookingEvent ? (
+                      <Link
+                        href={`/admin/matches/${match.id}`}
+                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-ludo-gold/35 bg-ludo-gold/10 px-3 text-xs font-black uppercase text-ludo-gold transition hover:bg-ludo-gold hover:text-ludo-black"
+                      >
+                        <Settings2 className="h-4 w-4" aria-hidden="true" />
+                        Manage Booking
+                      </Link>
+                    ) : null}
                     <form action={toggleMatchActive}>
                       <input type="hidden" name="id" value={match.id} />
                       <button

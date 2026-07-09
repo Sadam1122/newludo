@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 import { AdminCard } from "@/components/admin/AdminCard";
+import { AdminNotice } from "@/components/admin/AdminNotice";
+import { MatchBookingDetailsForm } from "@/components/admin/MatchBookingDetailsForm";
 import { PackageManager } from "@/components/admin/PackageManager";
 import { TableManager } from "@/components/admin/TableManager";
 import { isWhatsappOnlyTemplate } from "@/lib/eventGating";
@@ -19,13 +21,15 @@ const matchCategoryLabels: Record<string, string> = {
   IFTAR_2027: "Iftar",
 };
 
-export default async function ManageMatchBookingPage({
-  params,
-}: {
+type PageProps = {
   params: Promise<{ id: string }>;
-}) {
+  searchParams?: Promise<{ success?: string; error?: string }>;
+};
+
+export default async function ManageMatchBookingPage({ params, searchParams }: PageProps) {
   await requireAdminSession();
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
 
   const match = await prisma.matchCard.findUnique({
     where: { id },
@@ -50,6 +54,8 @@ export default async function ManageMatchBookingPage({
 
   return (
     <div className="space-y-6">
+      <AdminNotice success={resolvedSearchParams?.success} error={resolvedSearchParams?.error} />
+
       <div className="flex items-center gap-4">
         <Link
           href="/admin/matches"
@@ -61,8 +67,8 @@ export default async function ManageMatchBookingPage({
           <p className="text-sm font-black uppercase text-ludo-gold">Matches</p>
           <h1 className="mt-2 text-3xl font-black text-white">{matchTitle}</h1>
           <p className="mt-2 text-sm font-semibold text-white/50">
-            Manage tables & packages for this match. Match details (teams, date, category)
-            are edited from the{" "}
+            Manage the booking page, tables & packages for this match. Team names, date, and
+            category are edited from the{" "}
             <Link href="/admin/matches" className="text-ludo-gold hover:underline">
               Matches list
             </Link>
@@ -107,6 +113,7 @@ export default async function ManageMatchBookingPage({
         </div>
       ) : (
         <>
+          <MatchBookingDetailsForm matchId={match.id} bookingEvent={match.bookingEvent} />
           <PackageManager
             bookingEventId={match.bookingEvent.id}
             packages={match.bookingEvent.packages}
