@@ -35,6 +35,7 @@ export async function POST(req: Request) {
       select: { eventType: true },
     });
     isSeatBased = bookingEvent?.eventType === "NOBAR_COMMUNITY" && !!tableId;
+    const isDeliveryOrder = bookingEvent?.eventType === "DELIVERY_ORDER";
 
     // Fetch table for pricing/capacity info (not yet a lock; the atomic
     // guarded update below is the real lock).
@@ -108,7 +109,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const totals = computeOrderTotals(subtotal, discountPercent);
+    // Tax Service (16.6%) only applies to the a la carte portion: the whole
+    // order on the standalone Delivery Order page (everything there is a
+    // delivery-menu item), or just the add-on items on top of a table
+    // package everywhere else.
+    const alaCarteTaxableAmount = isDeliveryOrder ? subtotal : alaCarteSubtotal;
+    const totals = computeOrderTotals(subtotal, discountPercent, alaCarteTaxableAmount);
 
     // ---- Atomic table lock (guarded update, no read-then-write race) ----
     if (tableId && isSeatBased) {
@@ -162,6 +168,7 @@ export async function POST(req: Request) {
         status: "PENDING",
         totalPrice: totals.grandTotal,
         tax: totals.adminFee,
+        taxServiceAmount: totals.taxServiceAmount,
         discountAmount: totals.discountAmount,
         memberUsername,
         expiredAt,
@@ -184,7 +191,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // Request Midtrans Snap - item breakdown mirrors Total Belanja + Admin Fee (- discount) = Grand Total
+    // Request Midtrans Snap - item breakdown mirrors Total Belanja + Tax Service + Admin Fee (- discount) = Grand Total
     const itemDetails = [
       {
         id: packageId,
@@ -206,6 +213,15 @@ export async function POST(req: Request) {
         price: -totals.discountAmount,
         quantity: 1,
         name: `Member Discount (${totals.discountPercent}%)`,
+      });
+    }
+
+    if (totals.taxServiceAmount > 0) {
+      itemDetails.push({
+        id: "tax-service",
+        price: totals.taxServiceAmount,
+        quantity: 1,
+        name: "Tax Service (16.6%)",
       });
     }
 

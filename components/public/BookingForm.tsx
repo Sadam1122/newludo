@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BookingEvent, EventPackage, EventTable } from "@prisma/client";
-import { AlertTriangle, Check, Minus, Plus, UtensilsCrossed } from "lucide-react";
+import { AlertTriangle, Check, Loader2, Minus, Plus, UtensilsCrossed } from "lucide-react";
 import { DELIVERY_CATEGORIES, DeliveryCategoryKey } from "@/lib/deliveryCategories";
 import { computeOrderTotals } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
+import { verifyMemberLogin } from "@/server/actions/publicMemberActions";
 import { SeatMap } from "./SeatMap";
+
+type MemberVerifyState = "idle" | "loading" | "verified" | "error";
 
 type BookingEventWithRelations = BookingEvent & {
   packages: EventPackage[];
@@ -28,6 +31,10 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
   const [isMember, setIsMember] = useState(false);
   const [memberUsername, setMemberUsername] = useState("");
   const [memberPassword, setMemberPassword] = useState("");
+  const [memberVerifyState, setMemberVerifyState] = useState<MemberVerifyState>("idle");
+  const [memberVerifyError, setMemberVerifyError] = useState<string | null>(null);
+  const [verifiedDiscountPercent, setVerifiedDiscountPercent] = useState(0);
+  const [verifiedBenefitNote, setVerifiedBenefitNote] = useState<string | null>(null);
   const [alaCarteCart, setAlaCarteCart] = useState<Record<string, number>>({});
   const [seatQuantity, setSeatQuantity] = useState(1);
   const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null);
@@ -114,10 +121,45 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
     : 0;
   const alaCarteSubtotal = alaCarteLines.reduce((sum, line) => sum + (line.pkg!.price * line.qty), 0);
   const subtotal = packageSubtotal + alaCarteSubtotal;
-  const totals = useMemo(() => computeOrderTotals(subtotal, 0), [subtotal]);
+  // Tax Service (16.6%) only applies to a la carte items: the whole order on
+  // the standalone Delivery Order page, or just the add-on items on top of a
+  // table package everywhere else.
+  const alaCarteTaxableAmount = isDeliveryOrder ? subtotal : alaCarteSubtotal;
+  const activeDiscountPercent = isMember && memberVerifyState === "verified" ? verifiedDiscountPercent : 0;
+  const totals = useMemo(
+    () => computeOrderTotals(subtotal, activeDiscountPercent, alaCarteTaxableAmount),
+    [subtotal, activeDiscountPercent, alaCarteTaxableAmount],
+  );
 
   const minimumCharge = selectedTable?.basePrice ?? 0;
   const meetsMinimum = minimumCharge === 0 || subtotal >= minimumCharge;
+
+  const resetMemberVerification = () => {
+    setMemberVerifyState("idle");
+    setMemberVerifyError(null);
+    setVerifiedDiscountPercent(0);
+    setVerifiedBenefitNote(null);
+  };
+
+  const handleVerifyMember = async () => {
+    if (!memberUsername || !memberPassword) return;
+    setMemberVerifyState("loading");
+    setMemberVerifyError(null);
+
+    const result = await verifyMemberLogin(memberUsername, memberPassword);
+
+    if (!result.success) {
+      setMemberVerifyState("error");
+      setMemberVerifyError(result.error);
+      setVerifiedDiscountPercent(0);
+      setVerifiedBenefitNote(null);
+      return;
+    }
+
+    setMemberVerifyState("verified");
+    setVerifiedDiscountPercent(result.discountPercent);
+    setVerifiedBenefitNote(result.benefitNote);
+  };
 
   const handleCheckout = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -129,8 +171,8 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
     if (!meetsMinimum) {
       return alert(`Minimum charge for table ${selectedTable?.tableCode} is IDR ${minimumCharge.toLocaleString()}. Please add more items.`);
     }
-    if (isMember && (!memberUsername || !memberPassword)) {
-      return alert("Please enter your member username and password, or switch the member question back to No.");
+    if (isMember && memberVerifyState !== "verified") {
+      return alert('Silakan klik "Cek Member" untuk memverifikasi akun member Anda terlebih dahulu, atau ubah pertanyaan member ke "No".');
     }
 
     setIsSubmitting(true);
@@ -480,7 +522,12 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
               <div className="flex overflow-hidden rounded-full border border-white/15">
                 <button
                   type="button"
-                  onClick={() => setIsMember(false)}
+                  onClick={() => {
+                    setIsMember(false);
+                    setMemberUsername("");
+                    setMemberPassword("");
+                    resetMemberVerification();
+                  }}
                   className={cn(
                     "h-9 px-4 text-xs font-black uppercase transition",
                     !isMember ? "bg-ludo-gold text-black" : "text-zinc-400 hover:text-white",
@@ -507,7 +554,10 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                   <input
                     type="text"
                     value={memberUsername}
-                    onChange={(e) => setMemberUsername(e.target.value)}
+                    onChange={(e) => {
+                      setMemberUsername(e.target.value);
+                      resetMemberVerification();
+                    }}
                     placeholder="Member Username"
                     className="h-11 w-full rounded border border-white/10 bg-black/30 px-3 text-white outline-none focus:border-ludo-gold"
                     required={isMember}
@@ -515,16 +565,57 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                   <input
                     type="password"
                     value={memberPassword}
-                    onChange={(e) => setMemberPassword(e.target.value)}
+                    onChange={(e) => {
+                      setMemberPassword(e.target.value);
+                      resetMemberVerification();
+                    }}
                     placeholder="Member Password"
                     className="h-11 w-full rounded border border-white/10 bg-black/30 px-3 text-white outline-none focus:border-ludo-gold"
                     required={isMember}
                   />
                 </div>
-                <p className="text-xs leading-relaxed text-zinc-400">
-                  Benefit member: dapatkan diskon khusus sesuai akun member Anda. Diskon akan otomatis
-                  diterapkan ke Total Belanja setelah username &amp; password berhasil diverifikasi saat pembayaran.
-                </p>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleVerifyMember}
+                    disabled={
+                      !memberUsername || !memberPassword || memberVerifyState === "loading" || memberVerifyState === "verified"
+                    }
+                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-ludo-gold px-5 text-xs font-black uppercase text-black transition hover:bg-ludo-gold/90 disabled:opacity-50"
+                  >
+                    {memberVerifyState === "loading" ? (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin" />
+                        Memeriksa...
+                      </>
+                    ) : memberVerifyState === "verified" ? (
+                      <>
+                        <Check className="size-3.5" />
+                        Terverifikasi
+                      </>
+                    ) : (
+                      "Cek Member"
+                    )}
+                  </button>
+                  {memberVerifyState === "verified" && (
+                    <span className="text-xs font-bold text-ludo-green">
+                      Diskon {verifiedDiscountPercent}% berhasil diterapkan ke Total Belanja.
+                    </span>
+                  )}
+                  {memberVerifyState === "error" && memberVerifyError && (
+                    <span className="text-xs font-bold text-ludo-red">{memberVerifyError}</span>
+                  )}
+                </div>
+
+                {memberVerifyState === "verified" && verifiedBenefitNote ? (
+                  <p className="text-xs leading-relaxed text-ludo-gold/80">{verifiedBenefitNote}</p>
+                ) : (
+                  <p className="text-xs leading-relaxed text-zinc-400">
+                    Masukkan username &amp; password member Anda, lalu klik &quot;Cek Member&quot; untuk melihat
+                    dan menerapkan diskon Anda sebelum membayar.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -556,13 +647,27 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                 <span className="text-zinc-400">Total Belanja</span>
                 <span className="font-bold text-white">IDR {totals.subtotal.toLocaleString()}</span>
               </div>
+              {totals.discountAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Diskon Member ({totals.discountPercent}%)</span>
+                  <span className="font-bold text-ludo-green">
+                    - IDR {totals.discountAmount.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {totals.taxServiceAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Tax Service (16.6%)</span>
+                  <span className="font-bold text-white">IDR {totals.taxServiceAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-zinc-400">Admin Fee (3%)</span>
                 <span className="font-bold text-white">IDR {totals.adminFee.toLocaleString()}</span>
               </div>
-              {isMember && (
+              {isMember && memberVerifyState !== "verified" && (
                 <p className="text-xs italic text-zinc-500">
-                  Diskon member akan diterapkan otomatis setelah login member terverifikasi.
+                  Diskon member belum diterapkan. Klik &quot;Cek Member&quot; di atas untuk menerapkannya.
                 </p>
               )}
               {!meetsMinimum && (

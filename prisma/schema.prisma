@@ -269,6 +269,7 @@ model Reservation {
   status              ReservationStatus  @default(PENDING)
   totalPrice          Float              @default(0)
   tax                 Float              @default(0)
+  taxServiceAmount    Float              @default(0)
   discountAmount      Float              @default(0)
   memberUsername      String?
   snapToken           String?

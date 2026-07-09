@@ -1,4 +1,4 @@
-import { ToggleLeft, ToggleRight } from "lucide-react";
+import { Download, ToggleLeft, ToggleRight } from "lucide-react";
 
 import { ActiveStatusBadge } from "@/components/admin/ActiveStatusBadge";
 import { AdminCard } from "@/components/admin/AdminCard";
@@ -27,12 +27,22 @@ export default async function MembersPage({ searchParams }: PageProps) {
   return (
     <div>
       <AdminNotice success={params?.success} error={params?.error} />
-      <div className="mb-8">
-        <p className="text-sm font-black uppercase text-ludo-gold">CMS</p>
-        <h1 className="mt-2 text-3xl font-black text-white">Members</h1>
-        <p className="mt-2 text-sm font-semibold text-white/50">
-          Manually issue member credentials and their personal discount. Customers enter these at checkout to unlock the discount.
-        </p>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-black uppercase text-ludo-gold">CMS</p>
+          <h1 className="mt-2 text-3xl font-black text-white">Members</h1>
+          <p className="mt-2 text-sm font-semibold text-white/50">
+            Manually issue member credentials and their personal discount. Customers enter these at checkout to unlock the discount.
+          </p>
+        </div>
+        <a
+          href="/api/admin/export/members"
+          target="_blank"
+          className="inline-flex h-11 items-center gap-2 rounded-xl bg-ludo-green px-6 text-sm font-black uppercase text-black transition hover:scale-105 hover:bg-green-400"
+        >
+          <Download className="h-4 w-4" />
+          Export to Excel
+        </a>
       </div>
 
       <AdminCard title="Create Member">

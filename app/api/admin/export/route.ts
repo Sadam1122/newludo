@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import * as XLSX from "xlsx";
+import { buildStyledSheet, XLSX } from "@/lib/excelExport";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const session = await getAdminSession();
+  if (!session?.user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get("eventId");
@@ -85,6 +91,7 @@ export async function GET(req: Request) {
         "Nomor WhatsApp": res.customerPhone,
         "Email": res.customerEmail,
         "Total Harga": res.totalPrice,
+        "Tax Service (16.6%)": res.taxServiceAmount,
         "Status Order": res.status,
         "Payment Method": res.paymentMethod || "-",
         "Fraud Status": res.fraudStatus || "-",
@@ -169,12 +176,12 @@ export async function GET(req: Request) {
     // Generate Excel File
     const wb = XLSX.utils.book_new();
 
-    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-    const wsDetail = XLSX.utils.json_to_sheet(detailData);
-    const wsItems = XLSX.utils.json_to_sheet(itemDetailData);
-    const wsPackage = XLSX.utils.json_to_sheet(packageData);
-    const wsTable = XLSX.utils.json_to_sheet(tableData);
-    const wsPayment = XLSX.utils.json_to_sheet(paymentData);
+    const wsSummary = buildStyledSheet(summaryData);
+    const wsDetail = buildStyledSheet(detailData);
+    const wsItems = buildStyledSheet(itemDetailData);
+    const wsPackage = buildStyledSheet(packageData);
+    const wsTable = buildStyledSheet(tableData);
+    const wsPayment = buildStyledSheet(paymentData);
 
     XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
     XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Transaksi");

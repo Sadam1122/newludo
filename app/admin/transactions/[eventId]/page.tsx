@@ -245,6 +245,11 @@ export default async function TransactionDetailsPage({ params, searchParams }: P
                     </td>
                     <td className="px-4 py-4 font-bold text-ludo-gold">
                       Rp {res.totalPrice.toLocaleString()}
+                      {res.taxServiceAmount > 0 ? (
+                        <p className="mt-1 text-[10px] font-semibold text-zinc-500">
+                          incl. Tax Service Rp {res.taxServiceAmount.toLocaleString()}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="px-4 py-4">
                       <span className={cn("inline-flex items-center rounded-full border px-2 py-1 text-xs font-bold", statusColor)}>

@@ -31,9 +31,9 @@ export function buildLudoTableLayout() {
     tableType: "REGULAR_INDOOR" as TableType,
   }));
 
-  // Barstool (1 pax): B1-B7
+  // Barstool (1 pax): A-G
   const barstools = Array.from({ length: 7 }, (_, i) => ({
-    tableCode: `B${i + 1}`,
+    tableCode: String.fromCharCode(65 + i),
     capacity: 1,
     tableType: "BARSTOOL" as TableType,
   }));

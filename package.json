@@ -27,6 +27,7 @@
     "react-dom": "latest",
     "react-hook-form": "latest",
     "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0",
     "zod": "latest"
   },
   "devDependencies": {
