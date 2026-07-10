@@ -168,6 +168,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
 
   const minimumCharge = selectedTable?.basePrice ?? 0;
   const meetsMinimum = minimumCharge === 0 || subtotal >= minimumCharge;
+  const hasOrderContent = Boolean(selectedPackage) || alaCarteLines.length > 0;
 
   const resetMemberVerification = () => {
     setMemberVerifyState("idle");
@@ -199,7 +200,16 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
   const handleCheckout = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (hasTables && !selectedTable) return alert("Please select a table first");
-    if (!selectedPackage) return alert("Please select a package");
+    if (hasTables) {
+      // Once a table is selected, a package is no longer mandatory — the
+      // customer can satisfy the table's minimum spend with a la carte
+      // items alone, as long as something is actually in the order.
+      if (!selectedPackage && alaCarteLines.length === 0) {
+        return alert("Please select a package or add at least one menu item.");
+      }
+    } else if (!selectedPackage) {
+      return alert("Please select a package");
+    }
     if (isSeatBased && (seatQuantity < 1 || seatQuantity > remainingSeats)) {
       return alert(`Please select between 1 and ${remainingSeats} seat(s) on this table.`);
     }
@@ -226,7 +236,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventId: event.id,
-          packageId: selectedPackage.id,
+          packageId: selectedPackage?.id || null,
           tableId: selectedTable?.id || null,
           quantity: isSeatBased ? seatQuantity : hasTables ? 1 : quantity,
           customer: customerData,
@@ -479,10 +489,13 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
         </section>
       )}
 
-      {/* À La Carte Add-on Menu (Booking Events only, when enabled) */}
-      {showAlaCarte && selectedPackage && (
+      {/* À La Carte Add-on Menu (Booking Events only, when enabled). Visible
+          once a table is picked — a package is no longer required to reach
+          it, since a la carte items alone can satisfy the table's minimum
+          spend. */}
+      {showAlaCarte && (hasTables ? selectedTable : selectedPackage) && (
         <section className="animate-in fade-in slide-in-from-bottom-4">
-          <h2 className="mb-4 text-xl font-bold text-white">Add Menu Items (Optional)</h2>
+          <h2 className="mb-4 text-xl font-bold text-white">Add Menu Items</h2>
 
           {alaCarteLines.length > 0 && (
             <div className="sticky top-20 z-10 mb-4 rounded-xl border border-ludo-gold/30 bg-[#0a0a0a]/95 p-4 shadow-lg backdrop-blur-md">
@@ -531,7 +544,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
       )}
 
       {/* 3. Customer Details & Checkout */}
-      {selectedPackage && (
+      {(hasTables ? selectedTable : selectedPackage) && (
         <section className="animate-in fade-in slide-in-from-bottom-4 space-y-4">
           <h2 className="mb-4 text-xl font-bold text-white">Customer Details</h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -670,10 +683,12 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
 
           <div className="mt-8 rounded-xl bg-ludo-gold/10 p-6">
             <div className="mb-4 flex flex-col gap-2 border-b border-ludo-gold/20 pb-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Selected {isDeliveryOrder ? "Menu" : "Package"}</span>
-                <span className="font-bold text-white">{selectedPackage.name}</span>
-              </div>
+              {selectedPackage && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Selected {isDeliveryOrder ? "Menu" : "Package"}</span>
+                  <span className="font-bold text-white">{selectedPackage.name}</span>
+                </div>
+              )}
               {selectedTable && (
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">Table</span>
@@ -718,7 +733,12 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                   Diskon member belum diterapkan. Klik &quot;Cek Member&quot; di atas untuk menerapkannya.
                 </p>
               )}
-              {!meetsMinimum && (
+              {!hasOrderContent && (
+                <p className="text-xs font-bold text-ludo-red">
+                  Pilih package atau tambahkan minimal 1 menu untuk melanjutkan.
+                </p>
+              )}
+              {hasOrderContent && !meetsMinimum && (
                 <p className="text-xs font-bold text-ludo-red">
                   Belum memenuhi minimum charge IDR {minimumCharge.toLocaleString()} untuk table {selectedTable?.tableCode}. Tambahkan menu atau ganti package.
                 </p>
@@ -746,7 +766,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
             )}
             <button
               type="submit"
-              disabled={isSubmitting || !meetsMinimum || remainingSeconds === 0}
+              disabled={isSubmitting || !hasOrderContent || !meetsMinimum || remainingSeconds === 0}
               className="h-14 w-full rounded-full bg-[linear-gradient(90deg,#EF1F28,#F7C600)] text-lg font-black uppercase text-white shadow-[0_14px_34px_rgba(239,31,40,0.24)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(247,198,0,0.3)] disabled:opacity-50 disabled:hover:translate-y-0"
             >
               {isSubmitting ? "Processing Checkout..." : "Pay Now"}

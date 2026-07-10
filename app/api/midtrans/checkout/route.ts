@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   try {
     const { eventId, packageId, tableId, quantity, customer, member, alaCarteItems } = await req.json();
 
-    if (!eventId || !packageId || !customer?.name || !customer?.email || !customer?.phone) {
+    if (!eventId || !customer?.name || !customer?.email || !customer?.phone) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
@@ -22,18 +22,22 @@ export async function POST(req: Request) {
     // abandoned 20 minutes ago is available again before we check it.
     await releaseExpiredReservations(eventId);
 
-    // Validate Package
-    const eventPackage = await prisma.eventPackage.findUnique({
-      where: { id: packageId },
-    });
-    if (!eventPackage) {
-      return NextResponse.json({ message: "Package not found" }, { status: 404 });
-    }
-    if (eventPackage.isSoldOut) {
-      return NextResponse.json(
-        { message: `${eventPackage.name} is sold out. Please choose another item.` },
-        { status: 409 },
-      );
+    // Validate Package — optional once a table is selected, since a la carte
+    // items alone can satisfy the table's minimum spend without a package.
+    let eventPackage: Awaited<ReturnType<typeof prisma.eventPackage.findUnique>> = null;
+    if (packageId) {
+      eventPackage = await prisma.eventPackage.findUnique({
+        where: { id: packageId },
+      });
+      if (!eventPackage) {
+        return NextResponse.json({ message: "Package not found" }, { status: 404 });
+      }
+      if (eventPackage.isSoldOut) {
+        return NextResponse.json(
+          { message: `${eventPackage.name} is sold out. Please choose another item.` },
+          { status: 409 },
+        );
+      }
     }
 
     const bookingEvent = await prisma.bookingEvent.findUnique({
@@ -72,6 +76,13 @@ export async function POST(req: Request) {
       });
     }
 
+    if (!eventPackage && alaCarteLines.length === 0) {
+      return NextResponse.json(
+        { message: "Please select a package or add at least one menu item." },
+        { status: 400 },
+      );
+    }
+
     // Verify member credentials (if provided) before touching any pricing/table state
     let discountPercent = 0;
     let memberUsername: string | null = null;
@@ -93,7 +104,7 @@ export async function POST(req: Request) {
       memberUsername = memberRecord.username;
     }
 
-    const price = eventPackage.price;
+    const price = eventPackage?.price ?? 0;
     // Regular booking events lock the whole table (quantity = 1 table).
     // NOBAR_COMMUNITY events are sold per seat, so quantity is the seat count.
     const finalQuantity = isSeatBased
@@ -182,12 +193,28 @@ export async function POST(req: Request) {
         expiredAt,
         orderItems: {
           create: [
-            {
-              eventPackageId: packageId,
-              eventTableId: tableId || null,
-              quantity: finalQuantity,
-              price,
-            },
+            // Anchors the table to this reservation even without a package
+            // (0 price) so table release/admin display still work the same
+            // way — only skipped entirely for non-table, package-less orders.
+            ...(eventPackage
+              ? [
+                  {
+                    eventPackageId: packageId,
+                    eventTableId: tableId || null,
+                    quantity: finalQuantity,
+                    price,
+                  },
+                ]
+              : tableId
+                ? [
+                    {
+                      eventPackageId: null,
+                      eventTableId: tableId,
+                      quantity: 1,
+                      price: 0,
+                    },
+                  ]
+                : []),
             ...alaCarteLines.map((line) => ({
               eventPackageId: line.eventPackage.id,
               eventTableId: null,
@@ -202,12 +229,16 @@ export async function POST(req: Request) {
 
     // Request Midtrans Snap - item breakdown mirrors Total Belanja + Tax Service + Admin Fee (- discount) = Grand Total
     const itemDetails = [
-      {
-        id: packageId,
-        price: price,
-        quantity: finalQuantity,
-        name: `${eventPackage.name} ${eventTable ? `(${eventTable.tableCode})` : ""}`.trim(),
-      },
+      ...(eventPackage
+        ? [
+            {
+              id: packageId,
+              price: price,
+              quantity: finalQuantity,
+              name: `${eventPackage.name} ${eventTable ? `(${eventTable.tableCode})` : ""}`.trim(),
+            },
+          ]
+        : []),
       ...alaCarteLines.map((line) => ({
         id: line.eventPackage.id,
         price: line.eventPackage.price,
