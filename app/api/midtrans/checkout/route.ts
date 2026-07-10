@@ -54,11 +54,11 @@ export async function POST(req: Request) {
     }
 
     // Validate a la carte add-on items (optional)
-    const requestedAlaCarte: { packageId: string; quantity: number }[] = Array.isArray(alaCarteItems)
+    const requestedAlaCarte: { packageId: string; quantity: number; note?: string }[] = Array.isArray(alaCarteItems)
       ? alaCarteItems.filter((i: any) => i?.packageId && Number(i.quantity) > 0)
       : [];
 
-    let alaCarteLines: { eventPackage: { id: string; name: string; price: number }; quantity: number }[] = [];
+    let alaCarteLines: { eventPackage: { id: string; name: string; price: number }; quantity: number; note: string | null }[] = [];
     if (requestedAlaCarte.length > 0) {
       const alaCartePackages = await prisma.eventPackage.findMany({
         where: { id: { in: requestedAlaCarte.map((i) => i.packageId) } },
@@ -67,7 +67,8 @@ export async function POST(req: Request) {
         const pkg = alaCartePackages.find((p) => p.id === item.packageId);
         if (!pkg) throw new Error("One of the selected menu items is no longer available.");
         if (pkg.isSoldOut) throw new Error(`${pkg.name} is sold out. Please remove it from your order.`);
-        return { eventPackage: pkg, quantity: Number(item.quantity) };
+        const note = typeof item.note === "string" ? item.note.trim().slice(0, 200) : "";
+        return { eventPackage: pkg, quantity: Number(item.quantity), note: note || null };
       });
     }
 
@@ -192,6 +193,7 @@ export async function POST(req: Request) {
               eventTableId: null,
               quantity: line.quantity,
               price: line.eventPackage.price,
+              note: line.note,
             })),
           ],
         },
@@ -228,7 +230,7 @@ export async function POST(req: Request) {
         id: "tax-service",
         price: totals.taxServiceAmount,
         quantity: 1,
-        name: "Tax Service (16.6%)",
+        name: "Tax Service",
       });
     }
 
@@ -236,7 +238,7 @@ export async function POST(req: Request) {
       id: "admin-fee",
       price: totals.adminFee,
       quantity: 1,
-      name: "Admin Fee (3%)",
+      name: "Admin Fee",
     });
 
     let snapToken: string;

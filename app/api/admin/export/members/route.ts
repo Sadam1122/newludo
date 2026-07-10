@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { formatJakartaDateStamp, formatJakartaDateTime } from "@/lib/dateFormat";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildStyledSheet, XLSX } from "@/lib/excelExport";
@@ -22,8 +23,8 @@ export async function GET() {
       "Discount (%)": member.discountPercent,
       "Benefit Note": member.benefitNote || "-",
       Status: member.isActive ? "Active" : "Disabled",
-      "Dibuat": new Date(member.createdAt).toLocaleString("id-ID"),
-      "Diperbarui": new Date(member.updatedAt).toLocaleString("id-ID"),
+      "Dibuat": formatJakartaDateTime(member.createdAt),
+      "Diperbarui": formatJakartaDateTime(member.updatedAt),
     }));
 
     const wb = XLSX.utils.book_new();
@@ -31,7 +32,7 @@ export async function GET() {
     XLSX.utils.book_append_sheet(wb, ws, "Members");
 
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" });
-    const dateStr = new Date().toISOString().split("T")[0];
+    const dateStr = formatJakartaDateStamp();
     const filename = `Data_Member_Ludo_${dateStr}.xlsx`;
 
     return new NextResponse(excelBuffer, {

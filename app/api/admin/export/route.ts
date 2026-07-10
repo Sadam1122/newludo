@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { formatJakartaDateStamp, formatJakartaDateTime } from "@/lib/dateFormat";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildStyledSheet, XLSX } from "@/lib/excelExport";
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
       { Label: "Total Revenue Paid", Value: `Rp ${totalRevenuePaid.toLocaleString()}` },
       { Label: "Total Meja Booked/Paid", Value: totalTablesBooked },
       { Label: "Total Meja Available", Value: totalTablesAvailable },
-      { Label: "Waktu Export", Value: new Date().toLocaleString("id-ID") },
+      { Label: "Waktu Export", Value: formatJakartaDateTime(new Date()) },
     ];
 
     // 2. Sheet: Detail Transaksi
@@ -91,13 +92,13 @@ export async function GET(req: Request) {
         "Nomor WhatsApp": res.customerPhone,
         "Email": res.customerEmail,
         "Total Harga": res.totalPrice,
-        "Tax Service (16.6%)": res.taxServiceAmount,
+        "Tax Service": res.taxServiceAmount,
         "Status Order": res.status,
         "Payment Method": res.paymentMethod || "-",
         "Fraud Status": res.fraudStatus || "-",
-        "Waktu Booking": new Date(res.createdAt).toLocaleString("id-ID"),
-        "Waktu Expired": res.expiredAt ? new Date(res.expiredAt).toLocaleString("id-ID") : "-",
-        "Waktu Payment Success": res.paidAt ? new Date(res.paidAt).toLocaleString("id-ID") : "-",
+        "Waktu Booking": formatJakartaDateTime(res.createdAt),
+        "Waktu Expired": res.expiredAt ? formatJakartaDateTime(res.expiredAt) : "-",
+        "Waktu Payment Success": res.paidAt ? formatJakartaDateTime(res.paidAt) : "-",
         "Catatan": res.customerRequest || "-",
       };
     });
@@ -114,6 +115,7 @@ export async function GET(req: Request) {
         "Quantity": item.quantity,
         "Harga Satuan": item.price,
         "Subtotal": item.price * item.quantity,
+        "Catatan Item": item.note || "-",
       })),
     );
 
@@ -194,7 +196,7 @@ export async function GET(req: Request) {
 
     // Sanitize event title for filename
     const safeTitle = event.title.replace(/[^a-zA-Z0-9]/g, "_");
-    const dateStr = new Date().toISOString().split("T")[0];
+    const dateStr = formatJakartaDateStamp();
     const filename = `Rekap_Transaksi_Ludo_${safeTitle}_${dateStr}.xlsx`;
 
     return new NextResponse(excelBuffer, {

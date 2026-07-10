@@ -296,6 +296,7 @@ model OrderItem {
   eventTableId    String?
   quantity        Int           @default(1)
   price           Float         @default(0)
+  note            String?       @db.Text
   createdAt       DateTime      @default(now())
 
   reservation     Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)

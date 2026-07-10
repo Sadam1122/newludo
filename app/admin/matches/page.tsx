@@ -8,6 +8,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 import { MatchForm } from "@/components/admin/MatchForm";
 import { computeAvailability } from "@/lib/bookingAvailability";
+import { formatJakartaDateTime } from "@/lib/dateFormat";
 import { isWhatsappOnlyTemplate } from "@/lib/eventGating";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -135,10 +136,7 @@ export default async function MatchesPage({ searchParams }: PageProps) {
                   {match.matchDateLabel} &middot; {match.matchTimeLabel}
                   {match.scheduledAt ? (
                     <p className="mt-1 text-xs text-white/40">
-                      {match.scheduledAt.toLocaleString("id-ID", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      {formatJakartaDateTime(match.scheduledAt)}
                     </p>
                   ) : null}
                 </td>

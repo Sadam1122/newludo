@@ -2,7 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BookingEvent, EventPackage, EventTable } from "@prisma/client";
-import { AlertTriangle, Check, Loader2, Minus, Plus, UtensilsCrossed } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  Loader2,
+  Minus,
+  Plus,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 import { DELIVERY_CATEGORIES, DeliveryCategoryKey } from "@/lib/deliveryCategories";
 import { computeOrderTotals } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
@@ -36,6 +45,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
   const [verifiedDiscountPercent, setVerifiedDiscountPercent] = useState(0);
   const [verifiedBenefitNote, setVerifiedBenefitNote] = useState<string | null>(null);
   const [alaCarteCart, setAlaCarteCart] = useState<Record<string, number>>({});
+  const [alaCarteNotes, setAlaCarteNotes] = useState<Record<string, string>>({});
   const [seatQuantity, setSeatQuantity] = useState(1);
   const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
@@ -109,12 +119,37 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
     });
   };
 
+  const removeAlaCarteItem = (packageId: string) => {
+    setAlaCarteCart((current) => {
+      const next = { ...current };
+      delete next[packageId];
+      return next;
+    });
+  };
+
+  const setAlaCarteNote = (packageId: string, note: string) => {
+    setAlaCarteNotes((current) => ({ ...current, [packageId]: note }));
+  };
+
   const alaCarteLines = Object.entries(alaCarteCart)
     .map(([packageId, qty]) => ({
       pkg: alaCarteMenu.find((p) => p.id === packageId),
       qty,
+      note: alaCarteNotes[packageId] ?? "",
     }))
     .filter((line) => line.pkg);
+
+  // Group a la carte items by category (Beverages/Food) into collapsible
+  // sections so a long menu doesn't force one giant scroll.
+  const alaCarteCategoryGroups = (
+    Object.entries(DELIVERY_CATEGORIES) as [DeliveryCategoryKey, (typeof DELIVERY_CATEGORIES)[DeliveryCategoryKey]][]
+  )
+    .map(([key, value]) => ({
+      key,
+      label: value.label,
+      items: alaCarteMenu.filter((item) => item.category === key),
+    }))
+    .filter((group) => group.items.length > 0);
 
   const packageSubtotal = selectedPackage
     ? selectedPackage.price * (isSeatBased ? seatQuantity : hasTables ? 1 : quantity)
@@ -196,7 +231,11 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
           quantity: isSeatBased ? seatQuantity : hasTables ? 1 : quantity,
           customer: customerData,
           member: isMember ? { username: memberUsername, password: memberPassword } : null,
-          alaCarteItems: alaCarteLines.map((line) => ({ packageId: line.pkg!.id, quantity: line.qty })),
+          alaCarteItems: alaCarteLines.map((line) => ({
+            packageId: line.pkg!.id,
+            quantity: line.qty,
+            note: line.note.trim() || undefined,
+          })),
         }),
       });
 
@@ -359,7 +398,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                     type="button"
                     key={pkg.id}
                     disabled={isSoldOut}
-                    onClick={() => !isSoldOut && setSelectedPackage(pkg)}
+                    onClick={() => !isSoldOut && setSelectedPackage(isSelected ? null : pkg)}
                     className={cn(
                       "relative flex flex-col items-start overflow-hidden rounded-xl border text-left transition-all",
                       isSoldOut
@@ -444,70 +483,49 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
       {showAlaCarte && selectedPackage && (
         <section className="animate-in fade-in slide-in-from-bottom-4">
           <h2 className="mb-4 text-xl font-bold text-white">Add Menu Items (Optional)</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {alaCarteMenu.map((item) => {
-              const qty = alaCarteCart[item.id] ?? 0;
-              const isSoldOut = item.isSoldOut;
-              return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4",
-                    isSoldOut && "opacity-50",
-                  )}
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5">
-                      {item.posterImage ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.posterImage}
-                          alt={item.name}
-                          className={cn("h-full w-full object-cover", isSoldOut && "grayscale")}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <UtensilsCrossed className="size-5 text-zinc-600" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-bold text-white">{item.name}</p>
-                      <p className="text-xs text-zinc-400">
-                        {[item.category, item.subCategory].filter(Boolean).join(" • ")}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-ludo-gold">
-                        IDR {item.price.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  {isSoldOut ? (
-                    <span className="shrink-0 rounded-full border border-ludo-red/50 bg-ludo-red/20 px-3 py-1 text-xs font-black uppercase text-red-100">
-                      Sold Out
-                    </span>
-                  ) : (
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => adjustAlaCarteQty(item.id, -1)}
-                        disabled={qty === 0}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white disabled:opacity-30"
-                      >
-                        <Minus className="size-3.5" />
-                      </button>
-                      <span className="w-5 text-center text-sm font-bold text-white">{qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => adjustAlaCarteQty(item.id, 1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white hover:border-ludo-gold"
-                      >
-                        <Plus className="size-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+
+          {alaCarteLines.length > 0 && (
+            <div className="sticky top-20 z-10 mb-4 rounded-xl border border-ludo-gold/30 bg-[#0a0a0a]/95 p-4 shadow-lg backdrop-blur-md">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-black uppercase tracking-wide text-ludo-gold">
+                  Menu Terpilih ({alaCarteLines.reduce((sum, line) => sum + line.qty, 0)})
+                </p>
+                <p className="text-sm font-black text-ludo-gold">
+                  IDR {alaCarteSubtotal.toLocaleString()}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {alaCarteLines.map((line) => (
+                  <span
+                    key={line.pkg!.id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 py-1 pl-3 pr-1.5 text-xs font-semibold text-white"
+                  >
+                    {line.pkg!.name} × {line.qty}
+                    <button
+                      type="button"
+                      onClick={() => removeAlaCarteItem(line.pkg!.id)}
+                      className="flex h-4 w-4 items-center justify-center rounded-full text-zinc-400 hover:bg-ludo-red hover:text-white"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {alaCarteCategoryGroups.map((group) => (
+              <AlaCarteCategorySection
+                key={group.key}
+                label={group.label}
+                items={group.items}
+                alaCarteCart={alaCarteCart}
+                alaCarteNotes={alaCarteNotes}
+                adjustAlaCarteQty={adjustAlaCarteQty}
+                setAlaCarteNote={setAlaCarteNote}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -687,12 +705,12 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
               )}
               {totals.taxServiceAmount > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-400">Tax Service (16.6%)</span>
+                  <span className="text-zinc-400">Tax Service</span>
                   <span className="font-bold text-white">IDR {totals.taxServiceAmount.toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Admin Fee (3%)</span>
+                <span className="text-zinc-400">Admin Fee</span>
                 <span className="font-bold text-white">IDR {totals.adminFee.toLocaleString()}</span>
               </div>
               {isMember && memberVerifyState !== "verified" && (
@@ -747,6 +765,135 @@ function formatCountdown(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function AlaCarteCategorySection({
+  label,
+  items,
+  alaCarteCart,
+  alaCarteNotes,
+  adjustAlaCarteQty,
+  setAlaCarteNote,
+}: {
+  label: string;
+  items: EventPackage[];
+  alaCarteCart: Record<string, number>;
+  alaCarteNotes: Record<string, string>;
+  adjustAlaCarteQty: (packageId: string, delta: number) => void;
+  setAlaCarteNote: (packageId: string, note: string) => void;
+}) {
+  const selectedCount = items.reduce((sum, item) => sum + (alaCarteCart[item.id] ?? 0), 0);
+  // Initial value only — auto-expand a category that already has a
+  // selection so the customer doesn't lose sight of it, but afterwards this
+  // is fully manual so toggling one category never fights the user.
+  const [isOpen, setIsOpen] = useState(selectedCount > 0);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-black/10">
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex w-full items-center justify-between gap-3 p-4 text-left"
+      >
+        <span className="flex items-center gap-2 font-bold text-white">
+          {label}
+          <span className="text-xs font-normal text-zinc-500">({items.length})</span>
+        </span>
+        <div className="flex items-center gap-2">
+          {selectedCount > 0 && (
+            <span className="rounded-full bg-ludo-gold px-2 py-0.5 text-[10px] font-black text-black">
+              {selectedCount} dipilih
+            </span>
+          )}
+          <ChevronDown
+            className={cn("size-4 text-zinc-400 transition-transform", isOpen && "rotate-180")}
+          />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="space-y-3 border-t border-white/10 p-4 pt-3">
+          {items.map((item) => {
+            const qty = alaCarteCart[item.id] ?? 0;
+            const isSoldOut = item.isSoldOut;
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "rounded-xl border border-white/10 bg-black/20 p-4",
+                  isSoldOut && "opacity-50",
+                )}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5">
+                      {item.posterImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.posterImage}
+                          alt={item.name}
+                          className={cn("h-full w-full object-cover", isSoldOut && "grayscale")}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <UtensilsCrossed className="size-5 text-zinc-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-bold text-white">{item.name}</p>
+                      {item.subCategory && (
+                        <p className="text-xs text-zinc-400">{item.subCategory}</p>
+                      )}
+                      <p className="mt-1 text-sm font-black text-ludo-gold">
+                        IDR {item.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isSoldOut ? (
+                    <span className="shrink-0 self-start rounded-full border border-ludo-red/50 bg-ludo-red/20 px-3 py-1 text-xs font-black uppercase text-red-100 sm:self-center">
+                      Sold Out
+                    </span>
+                  ) : (
+                    <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => adjustAlaCarteQty(item.id, -1)}
+                        disabled={qty === 0}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white disabled:opacity-30"
+                      >
+                        <Minus className="size-3.5" />
+                      </button>
+                      <span className="w-6 text-center text-sm font-bold text-white">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => adjustAlaCarteQty(item.id, 1)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white hover:border-ludo-gold"
+                      >
+                        <Plus className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {!isSoldOut && qty > 0 && (
+                  <input
+                    type="text"
+                    value={alaCarteNotes[item.id] ?? ""}
+                    onChange={(e) => setAlaCarteNote(item.id, e.target.value)}
+                    placeholder="Catatan (opsional): less sugar, less ice, hot, no spicy..."
+                    maxLength={200}
+                    className="mt-3 h-10 w-full rounded border border-white/10 bg-black/30 px-3 text-xs text-white outline-none focus:border-ludo-gold"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FilterChip({

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { SyncPaymentButton } from "@/components/admin/SyncPaymentButton";
 import { requireAdminSession } from "@/lib/auth";
+import { formatJakartaDateTime } from "@/lib/dateFormat";
 import { prisma } from "@/lib/prisma";
 import { Download, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -257,12 +258,12 @@ export default async function TransactionDetailsPage({ params, searchParams }: P
                       </span>
                       {res.expiredAt ? (
                         <p className="mt-1 text-[10px] text-zinc-500">
-                          Expires: {new Date(res.expiredAt).toLocaleString("id-ID")}
+                          Expires: {formatJakartaDateTime(res.expiredAt)}
                         </p>
                       ) : null}
                       {res.paidAt ? (
                         <p className="mt-1 text-[10px] text-ludo-green">
-                          Paid: {new Date(res.paidAt).toLocaleString("id-ID")}
+                          Paid: {formatJakartaDateTime(res.paidAt)}
                         </p>
                       ) : null}
                     </td>
@@ -278,7 +279,7 @@ export default async function TransactionDetailsPage({ params, searchParams }: P
                       ) : null}
                     </td>
                     <td className="px-4 py-4 text-xs text-zinc-400">
-                      {new Date(res.createdAt).toLocaleString("id-ID")}
+                      {formatJakartaDateTime(res.createdAt)}
                     </td>
                     <td className="px-4 py-4">
                       {res.status === "PENDING" ? (

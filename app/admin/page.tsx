@@ -13,6 +13,7 @@ import Link from "next/link";
 
 import { AdminCard } from "@/components/admin/AdminCard";
 import { AdminNotice } from "@/components/admin/AdminNotice";
+import { formatJakartaDateTime } from "@/lib/dateFormat";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -121,7 +122,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         <AdminCard title="Media Files" value={mediaFiles} />
         <AdminCard
           title="Last Updated"
-          value={lastUpdated ? lastUpdated.toLocaleString("id-ID") : "-"}
+          value={lastUpdated ? formatJakartaDateTime(lastUpdated) : "-"}
         />
       </div>
 
