@@ -89,7 +89,7 @@ export function PackageManager({ bookingEventId, packages, mode = "event" }: Pro
                       <p className="text-xs text-zinc-400">
                         {isDelivery
                           ? [pkg.category, pkg.subCategory].filter(Boolean).join(" • ")
-                          : pkg.tableType.replace(/_/g, " ")}
+                          : (pkg.tableType?.replace(/_/g, " ") ?? "No table type")}
                         {" • "}IDR {pkg.price.toLocaleString()}
                       </p>
                       {pkg.description ? (
@@ -163,9 +163,10 @@ function PackageForm({
 
   const handleSubmit = (formData: FormData) => {
     formData.append("bookingEventId", bookingEventId);
-    if (isDelivery && !isEditing) {
-      formData.append("tableType", "DELIVERY");
-    }
+    // Sent on every submit (create AND edit) — the server relies on this to
+    // decide whether tableType is required, since delivery mode has no
+    // Table Type field in this form at all.
+    formData.append("mode", isDelivery ? "delivery" : "event");
     if (pkg) {
       formData.append("id", pkg.id);
     }
@@ -239,7 +240,7 @@ function PackageForm({
             <FormFieldLabel>Table Type</FormFieldLabel>
             <select
               name="tableType"
-              defaultValue={pkg?.tableType}
+              defaultValue={pkg?.tableType ?? undefined}
               className="h-9 w-full rounded border border-white/10 bg-ludo-black px-3 text-sm text-white outline-none focus:border-ludo-gold"
             >
               {tableTypes.map((t) => (

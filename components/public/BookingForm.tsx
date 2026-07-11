@@ -449,7 +449,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                           <p className="text-sm text-zinc-400">
                             {isDeliveryOrder
                               ? [pkg.category, pkg.subCategory].filter(Boolean).join(" • ")
-                              : pkg.tableType.replace(/_/g, " ")}
+                              : (pkg.tableType?.replace(/_/g, " ") ?? "")}
                           </p>
                           {pkg.description && (
                             <p className="mt-1 text-xs text-zinc-500">{pkg.description}</p>

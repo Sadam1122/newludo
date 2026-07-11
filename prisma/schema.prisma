@@ -226,7 +226,9 @@ model EventPackage {
   description     String?           @db.Text
   price           Float             @default(0)
   posterImage     String?
-  tableType       TableType
+  // Nullable: only table/event packages need a table type. Delivery Order
+  // menu items are not tied to a table, so this stays null for those.
+  tableType       TableType?
   category        DeliveryCategory?
   subCategory     String?
   isActive        Boolean           @default(true)
