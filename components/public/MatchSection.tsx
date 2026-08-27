@@ -1,12 +1,22 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  MessageCircle,
+  ShoppingCart,
+  Ticket,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PublicMatch } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
+import { resolveMatchBookingCta, type MatchCtaIconKey } from "@/lib/bookingCta";
 import { cn, shouldBypassImageOptimization } from "@/lib/utils";
 
 type MatchSectionProps = {
@@ -16,12 +26,14 @@ type MatchSectionProps = {
   defaultMessage: string;
 };
 
-const statusCopy: Record<PublicMatch["status"], string> = {
-  BOOK: "BOOK",
-  LIMITED: "LIMITED",
-  FULL_BOOKED: "FULL BOOKED",
-  CURRENTLY_SHOWING: "CURRENTLY SHOWING",
-};
+const CTA_ICONS = {
+  MessageCircle,
+  Ticket,
+  ExternalLink,
+  CalendarCheck,
+  ShoppingCart,
+  ArrowRight,
+} satisfies Record<MatchCtaIconKey, typeof ArrowRight>;
 
 export function MatchSection({
   title,
@@ -247,6 +259,8 @@ function MatchCard({
   // Only offer the real payment flow once the linked event actually has packages
   // configured — otherwise fall back to WhatsApp instead of a dead-end booking page.
   const isBookable = Boolean(match.bookingEventId) && match.hasPackages;
+  const cta = resolveMatchBookingCta(match, whatsappNumber, defaultMessage);
+  const CustomCtaIcon = cta.icon ? CTA_ICONS[cta.icon] : null;
 
   return (
     <article className="group relative min-h-[366px] overflow-hidden rounded-[22px] border border-white/10 bg-[#0B0B0B] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.34)] transition duration-300 hover:-translate-y-1 hover:border-[#EF1F28]/60 sm:min-h-[386px] sm:p-5">
@@ -283,19 +297,36 @@ function MatchCard({
       <div className="relative z-20 mt-5">
         {isFull ? (
           <span className="inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-full bg-[#EF1F28] px-4 text-center text-sm font-black uppercase text-white opacity-85">
-            {match.buttonLabel}
+            {cta.label}
           </span>
-        ) : isBookable ? (
+        ) : cta.type === "INTERNAL" ? (
           <Link
-            href={`/book/${match.bookingEventId}`}
+            href={cta.href}
             className={cn(
               "inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(90deg,#EF1F28,#F7C600)] px-4 text-center text-sm font-black uppercase text-white shadow-[0_14px_34px_rgba(239,31,40,0.24)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(247,198,0,0.3)]",
               match.status === "LIMITED" &&
                 "!bg-[#F7C600] !text-[#050505] shadow-[0_14px_34px_rgba(247,198,0,0.24)] hover:!bg-[#ffdc32]",
             )}
           >
-            {match.buttonLabel}
+            {cta.label}
           </Link>
+        ) : cta.isCustom ? (
+          <a
+            href={cta.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-full px-4 text-center text-sm font-black uppercase shadow-[0_14px_34px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
+            style={{
+              backgroundColor: cta.color ?? "#25D366",
+              color: cta.textColor,
+              outlineColor: cta.color ?? "#25D366",
+            }}
+          >
+            {CustomCtaIcon ? (
+              <CustomCtaIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            ) : null}
+            <span className="min-w-0 break-words">{cta.label}</span>
+          </a>
         ) : (
           <WhatsAppButton
             phoneNumber={whatsappNumber}
@@ -303,7 +334,7 @@ function MatchCard({
             variant="solid"
             className="w-full"
           >
-            {match.buttonLabel}
+            {cta.label}
           </WhatsAppButton>
         )}
       </div>

@@ -164,7 +164,8 @@ export function EventBanner({
 
             <div className="rounded-[20px] border border-white/12 bg-black/58 p-4 backdrop-blur-md sm:rounded-[24px] sm:p-7">
               <p className="flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#F7C600] sm:text-xs sm:tracking-[0.24em]">
-                {event.category === "LIVE_EVENT" ? (
+                {event.category === "LIVE_EVENT" ||
+                event.eventType === "MUSIC" ? (
                   <Music2 className="h-4 w-4" aria-hidden="true" />
                 ) : (
                   <Trophy className="h-4 w-4" aria-hidden="true" />
@@ -206,7 +207,9 @@ export function EventBanner({
                 </InfoRow>
               </div>
 
-              {!event.isWhatsappOnly && event.totalTables !== null && event.totalTables > 0 ? (
+              {!event.isWhatsappOnly &&
+              event.totalTables !== null &&
+              event.totalTables > 0 ? (
                 <p
                   className={cn(
                     "mt-4 inline-flex rounded-full px-3 py-1.5 text-xs font-black uppercase",

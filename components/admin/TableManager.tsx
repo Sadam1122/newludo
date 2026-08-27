@@ -34,7 +34,7 @@ export function TableManager({ bookingEventId, tables }: Props) {
     return (
       <AdminCard title="Table Management">
         <div className="rounded-lg border border-white/10 bg-zinc-900/50 p-8 text-center text-sm text-zinc-400">
-          No tables generated for this event yet. Use the "Generate Tables" button on the listing page.
+          No tables generated for this event yet. Use the &quot;Generate Tables&quot; button on the listing page.
         </div>
       </AdminCard>
     );

@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { saveUploadedImage, saveUploadedVideo } from "@/lib/upload";
+import {
+  getMaxVideoUploadMb,
+  isAllowedVideo,
+  saveUploadedImage,
+  saveUploadedVideo,
+} from "@/lib/upload";
 import {
   getFormBoolean,
   getFormFile,
@@ -76,24 +81,30 @@ export async function createMultipleGalleryItems(formData: FormData) {
       throw new Error("No video files provided.");
     }
 
+    const validFiles = videoFiles.filter((file) => file.name && file.size > 0);
+    const invalidFile = validFiles.find((file) => !isAllowedVideo(file));
+    if (invalidFile) {
+      throw new Error(
+        `${invalidFile.name} is not a supported MP4, WEBM, or MOV file under ${getMaxVideoUploadMb()}MB.`,
+      );
+    }
+
     const createdItems = [];
-    
-    for (let i = 0; i < videoFiles.length; i++) {
-      const file = videoFiles[i];
-      if (!file.name || file.size === 0) continue;
-      
+
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
       const media = await saveUploadedVideo(file);
-      
+
       // Auto-generate title from filename (remove extension)
       const title = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-      
+
       const data = {
         title,
         videoUrl: media.url,
         isActive: true,
         sortOrder: nextSortOrder + i,
       };
-      
+
       const item = await prisma.galleryItem.create({ data });
       createdItems.push(item);
     }

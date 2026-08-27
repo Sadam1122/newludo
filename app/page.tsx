@@ -180,6 +180,12 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     totalTables: null,
     hasPackages: false,
     isWhatsappOnly: false,
+    customCtaEnabled: false,
+    customCtaType: null,
+    customCtaText: null,
+    customCtaColor: null,
+    customCtaIcon: null,
+    customCtaUrl: null,
   },
   {
     id: "default-match-2",
@@ -206,6 +212,12 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     totalTables: null,
     hasPackages: false,
     isWhatsappOnly: false,
+    customCtaEnabled: false,
+    customCtaType: null,
+    customCtaText: null,
+    customCtaColor: null,
+    customCtaIcon: null,
+    customCtaUrl: null,
   },
   {
     id: "default-match-3",
@@ -232,6 +244,12 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     totalTables: null,
     hasPackages: false,
     isWhatsappOnly: false,
+    customCtaEnabled: false,
+    customCtaType: null,
+    customCtaText: null,
+    customCtaColor: null,
+    customCtaIcon: null,
+    customCtaUrl: null,
   },
   {
     id: "default-match-4",
@@ -259,6 +277,12 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     totalTables: null,
     hasPackages: false,
     isWhatsappOnly: false,
+    customCtaEnabled: false,
+    customCtaType: null,
+    customCtaText: null,
+    customCtaColor: null,
+    customCtaIcon: null,
+    customCtaUrl: null,
   },
   {
     id: "default-match-5",
@@ -285,6 +309,12 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     totalTables: null,
     hasPackages: false,
     isWhatsappOnly: false,
+    customCtaEnabled: false,
+    customCtaType: null,
+    customCtaText: null,
+    customCtaColor: null,
+    customCtaIcon: null,
+    customCtaUrl: null,
   },
   {
     id: "default-match-6",
@@ -312,6 +342,12 @@ const DEFAULT_MATCHES: PublicMatch[] = [
     totalTables: null,
     hasPackages: false,
     isWhatsappOnly: false,
+    customCtaEnabled: false,
+    customCtaType: null,
+    customCtaText: null,
+    customCtaColor: null,
+    customCtaIcon: null,
+    customCtaUrl: null,
   },
 ];
 
@@ -319,6 +355,7 @@ const DEFAULT_EVENTS: PublicEvent[] = [
   {
     id: "default-event-1",
     category: "LIVE_EVENT",
+    eventType: "MUSIC",
     isWhatsappOnly: true,
     title: "Live Performance",
     artistName: "AGNES MONICA",
@@ -341,6 +378,7 @@ const DEFAULT_EVENTS: PublicEvent[] = [
   {
     id: "default-event-2",
     category: "LIVE_EVENT",
+    eventType: "REGULER_MATCH",
     isWhatsappOnly: true,
     title: "Match Night",
     artistName: "LUDO CROWD",
@@ -420,7 +458,9 @@ const DEFAULT_FAQS: PublicFAQ[] = [
 ];
 
 type MatchCardWithBookingEvent = MatchCard & {
-  bookingEvent: (BookingEventModel & { tables: EventTable[]; packages: EventPackage[] }) | null;
+  bookingEvent:
+    | (BookingEventModel & { tables: EventTable[]; packages: EventPackage[] })
+    | null;
 };
 
 type BookingEventWithTables = BookingEventModel & { tables: EventTable[] };
@@ -489,7 +529,9 @@ export default async function HomePage() {
     matches.length > 0
       ? matches.map((match) => {
           const isWhatsappOnly = isWhatsappOnlyTemplate(match.matchCategory);
-          const linkedTables = !isWhatsappOnly ? match.bookingEvent?.tables ?? [] : [];
+          const linkedTables = !isWhatsappOnly
+            ? (match.bookingEvent?.tables ?? [])
+            : [];
           const availability = computeAvailability(linkedTables);
           const hasLiveEvent = !isWhatsappOnly && Boolean(match.bookingEvent);
           return {
@@ -515,8 +557,15 @@ export default async function HomePage() {
             bookingEventId: isWhatsappOnly ? null : match.bookingEventId,
             availableTables: hasLiveEvent ? availability.availableTables : null,
             totalTables: hasLiveEvent ? availability.totalTables : null,
-            hasPackages: hasLiveEvent && (match.bookingEvent?.packages.length ?? 0) > 0,
+            hasPackages:
+              hasLiveEvent && (match.bookingEvent?.packages.length ?? 0) > 0,
             isWhatsappOnly,
+            customCtaEnabled: match.customCtaEnabled,
+            customCtaType: match.customCtaType,
+            customCtaText: match.customCtaText,
+            customCtaColor: match.customCtaColor,
+            customCtaIcon: match.customCtaIcon,
+            customCtaUrl: match.customCtaUrl,
           };
         })
       : DEFAULT_MATCHES;
@@ -526,10 +575,12 @@ export default async function HomePage() {
       ? events.map((event) => {
           const availability = computeAvailability(event.tables);
           const isWhatsappOnly =
-            event.category === "LIVE_EVENT" || isWhatsappOnlyTemplate(event.eventType);
+            event.category === "LIVE_EVENT" ||
+            isWhatsappOnlyTemplate(event.eventType);
           return {
             id: event.id,
             category: event.category,
+            eventType: event.eventType,
             isWhatsappOnly,
             title: event.title,
             artistName: event.artistName ?? "",
@@ -548,8 +599,10 @@ export default async function HomePage() {
             backgroundImage: event.backgroundImage,
             ctaLabel: event.ctaLabel,
             whatsappMessage: isWhatsappOnly ? event.whatsappMessage : null,
-            availableTables: event.tables.length > 0 ? availability.availableTables : null,
-            totalTables: event.tables.length > 0 ? availability.totalTables : null,
+            availableTables:
+              event.tables.length > 0 ? availability.availableTables : null,
+            totalTables:
+              event.tables.length > 0 ? availability.totalTables : null,
           };
         })
       : DEFAULT_EVENTS;
@@ -725,7 +778,8 @@ async function getHomepageContent(): Promise<HomepageContent> {
       }),
     ]);
 
-    const [settings, heroes, matches, events, location, faqs, brands, gallery] = result;
+    const [settings, heroes, matches, events, location, faqs, brands, gallery] =
+      result;
 
     return [
       settings,

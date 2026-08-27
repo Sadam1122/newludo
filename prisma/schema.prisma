@@ -64,6 +64,12 @@ model MatchCard {
   status           MatchStatus
   buttonLabel      String
   whatsappMessage  String?
+  customCtaEnabled Boolean          @default(false)
+  customCtaType    MatchCtaType?
+  customCtaText    String?
+  customCtaColor   String?
+  customCtaIcon    String?
+  customCtaUrl     String?          @db.Text
   showSoldOutStamp Boolean          @default(false)
   subTextTitle     String?
   isActive         Boolean          @default(true)
@@ -87,6 +93,11 @@ enum MatchStatus {
 enum MatchDisplayMode {
   TEAM_MATCH
   GENERAL_EVENT
+}
+
+enum MatchCtaType {
+  WHATSAPP
+  VENDOR
 }
 
 model HeroSection {
@@ -316,6 +327,7 @@ enum EventTemplate {
   BIG_MATCH
   SUPER_BIG_MATCH
   IFTAR_2027
+  MUSIC
   DELIVERY_ORDER
 }
 

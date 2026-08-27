@@ -3,6 +3,7 @@ import type { MatchCard } from "@prisma/client";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { FormFieldLabel } from "@/components/admin/FormFieldLabel";
 import { InfoTooltip } from "@/components/admin/InfoTooltip";
+import { MatchCtaFields } from "@/components/admin/MatchCtaFields";
 import { createMatch, updateMatch } from "@/server/actions/matchActions";
 
 const displayModes = [
@@ -223,6 +224,16 @@ export function MatchForm({
           defaultChecked={match?.showSoldOutStamp ?? false}
         />
       </div>
+
+      <MatchCtaFields
+        defaultEnabled={match?.customCtaEnabled}
+        defaultType={match?.customCtaType}
+        defaultText={match?.customCtaText}
+        defaultColor={match?.customCtaColor}
+        defaultIcon={match?.customCtaIcon}
+        defaultUrl={match?.customCtaUrl}
+        fallbackText={match?.buttonLabel ?? "BOOK"}
+      />
 
       <ConfirmSubmitButton
         title={isEditing ? "Save schedule item?" : "Create schedule item?"}

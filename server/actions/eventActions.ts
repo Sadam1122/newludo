@@ -57,7 +57,7 @@ async function buildEventData(formData: FormData) {
   return parsed;
 }
 
-export async function createEvent(prevState: any, formData: FormData) {
+export async function createEvent(prevState: unknown, formData: FormData) {
   try {
     await requireAdminSession();
     const data = await buildEventData(formData);
@@ -73,7 +73,7 @@ export async function createEvent(prevState: any, formData: FormData) {
   redirectWithMessage(adminPath, "success", "Event created successfully");
 }
 
-export async function updateEvent(id: string, prevState: any, formData: FormData) {
+export async function updateEvent(id: string, prevState: unknown, formData: FormData) {
   try {
     await requireAdminSession();
     const validId = idSchema.parse(id);

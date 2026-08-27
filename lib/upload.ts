@@ -5,7 +5,21 @@ import path from "node:path";
 import { prisma } from "@/lib/prisma";
 
 const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024;
-const MAX_VIDEO_FILE_SIZE = 50 * 1024 * 1024;
+const DEFAULT_MAX_VIDEO_UPLOAD_MB = 50;
+
+export function getMaxVideoUploadMb() {
+  const configured = Number(process.env.MAX_VIDEO_UPLOAD_MB);
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : DEFAULT_MAX_VIDEO_UPLOAD_MB;
+}
+
+export function getMaxGalleryUploadRequestMb() {
+  const configured = Number(process.env.MAX_GALLERY_UPLOAD_REQUEST_MB);
+  return Number.isFinite(configured) && configured > 0 ? configured : 60;
+}
+
+const MAX_VIDEO_FILE_SIZE = getMaxVideoUploadMb() * 1024 * 1024;
 
 const ALLOWED_IMAGE_MIME_TYPES = new Map([
   ["image/jpeg", "jpg"],
@@ -89,7 +103,7 @@ async function saveUploadedFile(
     throw new Error(
       kind === "image"
         ? "Image size must not exceed 5MB."
-        : "Video size must not exceed 50MB.",
+        : `Video size must not exceed ${getMaxVideoUploadMb()}MB.`,
     );
   }
 

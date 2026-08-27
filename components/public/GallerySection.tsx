@@ -1,7 +1,7 @@
 "use client";
 
 import { Play, Video, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { PublicGalleryItem } from "@/components/public/types";
 
@@ -14,12 +14,16 @@ const ITEMS_PER_PAGE = 3;
 export function GallerySection({ items }: GallerySectionProps) {
   const videos = items.filter((item) => item.videoUrl);
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const handleVideoVisible = useCallback((id: string) => {
+    setActiveVideoId(id);
+  }, []);
 
   const totalPages = Math.ceil(videos.length / ITEMS_PER_PAGE);
   const paginatedVideos = videos.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   if (videos.length === 0) return null;
@@ -56,20 +60,12 @@ export function GallerySection({ items }: GallerySectionProps) {
               key={item.id}
               className="group min-w-[82vw] snap-start overflow-hidden rounded-[26px] border border-white/10 bg-[#0B0B0B] shadow-[0_28px_90px_rgba(0,0,0,0.32)] transition hover:-translate-y-1 hover:border-[#EF1F28]/55 sm:min-w-[46vw] lg:min-w-0"
             >
-              <div className="relative bg-black">
-                <video
-                  src={`${item.videoUrl}#t=0.001`}
-                  controls
-                  muted
-                  playsInline
-                  preload={index === 0 ? "metadata" : "none"}
-                  poster={item.thumbnailUrl ?? undefined}
-                  className="aspect-[9/16] w-full bg-black object-cover"
-                />
-                <div className="pointer-events-none absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur">
-                  <Play className="h-4 w-4 fill-current" aria-hidden="true" />
-                </div>
-              </div>
+              <GalleryVideo
+                item={item}
+                active={activeVideoId === item.id}
+                eager={index === 0}
+                onVisible={handleVideoVisible}
+              />
 
               <div className="p-5">
                 <h3 className="break-words text-lg font-black uppercase leading-tight text-[#F8EDE7]">
@@ -123,5 +119,100 @@ export function GallerySection({ items }: GallerySectionProps) {
         )}
       </div>
     </section>
+  );
+}
+
+function GalleryVideo({
+  item,
+  active,
+  eager,
+  onVisible,
+}: {
+  item: PublicGalleryItem;
+  active: boolean;
+  eager: boolean;
+  onVisible: (id: string) => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const visible = entry.isIntersecting && entry.intersectionRatio >= 0.58;
+        setIsVisible(visible);
+        if (visible) onVisible(item.id);
+      },
+      { threshold: [0, 0.58, 0.85] },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [item.id, onVisible]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!active || !isVisible) {
+      video.pause();
+      return;
+    }
+
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise) {
+      playPromise
+        .then(() => setAutoplayBlocked(false))
+        .catch(() => setAutoplayBlocked(true));
+    }
+  }, [active, isVisible]);
+
+  const playManually = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    onVisible(item.id);
+    video.muted = true;
+    void video
+      .play()
+      .then(() => setAutoplayBlocked(false))
+      .catch(() => setAutoplayBlocked(true));
+  };
+
+  return (
+    <div className="relative bg-black">
+      <video
+        ref={videoRef}
+        src={item.videoUrl}
+        controls
+        autoPlay={active && isVisible}
+        muted
+        playsInline
+        loop
+        preload={eager || active ? "metadata" : "none"}
+        poster={item.thumbnailUrl ?? undefined}
+        onPlay={() => onVisible(item.id)}
+        className="aspect-[9/16] w-full bg-black object-cover"
+      />
+      {autoplayBlocked ? (
+        <button
+          type="button"
+          onClick={playManually}
+          className="absolute inset-0 flex items-center justify-center bg-black/30 text-white"
+          aria-label={`Play ${item.title}`}
+        >
+          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/30 bg-black/70 backdrop-blur">
+            <Play className="h-5 w-5 fill-current" aria-hidden="true" />
+          </span>
+        </button>
+      ) : (
+        <div className="pointer-events-none absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur">
+          <Play className="h-4 w-4 fill-current" aria-hidden="true" />
+        </div>
+      )}
+    </div>
   );
 }

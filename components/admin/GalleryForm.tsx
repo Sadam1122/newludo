@@ -14,9 +14,13 @@ import {
 export function GalleryForm({
   item,
   nextSortOrder,
+  maxVideoUploadMb = 50,
+  maxUploadRequestMb = 60,
 }: {
   item?: GalleryItem | null;
   nextSortOrder?: number;
+  maxVideoUploadMb?: number;
+  maxUploadRequestMb?: number;
 }) {
   const isEditing = Boolean(item);
   const [isBulkMode, setIsBulkMode] = useState(false);
@@ -59,7 +63,9 @@ export function GalleryForm({
         {isBulkMode ? (
           <div className="rounded-xl border border-white/10 bg-black/20 p-4">
             <p className="mb-4 text-sm text-zinc-400">
-              Select multiple video files. The filename will automatically be used as the Title. Sort order will be generated sequentially.
+              Select multiple video files. Each file may be up to {maxVideoUploadMb}MB,
+              and the combined request must stay below {maxUploadRequestMb}MB. The filename
+              becomes the title automatically.
             </p>
             <label className="block">
               <FormFieldLabel required>Select Multiple Video Files</FormFieldLabel>
@@ -108,7 +114,7 @@ export function GalleryForm({
                 label="Upload Video" 
                 name="videoFile" 
                 kind="video" 
-                tooltip="Optimal format: MP4 (H.264), portrait 9:16 aspect ratio (e.g., 1080x1920px). Max size: 20MB."
+                tooltip={`Optimal format: MP4 (H.264), portrait 9:16 aspect ratio (e.g., 1080x1920px). Maximum size: ${maxVideoUploadMb}MB.`}
               />
               <Field
                 label="Thumbnail URL"

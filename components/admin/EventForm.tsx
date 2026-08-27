@@ -1,14 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BookingEvent, EventTemplate, EventCategory } from "@prisma/client";
-import { Check, Info, Trash2 } from "lucide-react";
+import { Info } from "lucide-react";
 
 import {
   createEvent,
-  deleteEvent,
   updateEvent,
 } from "@/server/actions/eventActions";
 import { AdminCard } from "./AdminCard";
@@ -34,6 +33,7 @@ const templates = [
   "BIG_MATCH",
   "SUPER_BIG_MATCH",
   "IFTAR_2027",
+  "MUSIC",
 ] as const;
 
 export function EventForm({ event, nextSortOrder = 0 }: Props) {
@@ -42,7 +42,7 @@ export function EventForm({ event, nextSortOrder = 0 }: Props) {
     ? updateEvent.bind(null, event.id)
     : createEvent;
 
-  const [state, formAction, isPending] = useActionState(action, null);
+  const [state, formAction] = useActionState(action, null);
   const [selectedTemplate, setSelectedTemplate] = useState<EventTemplate>(
     event?.eventType ?? "REGULER_MATCH"
   );
@@ -409,8 +409,8 @@ export function EventForm({ event, nextSortOrder = 0 }: Props) {
             <li className="flex items-start gap-3">
               <Info className="mt-0.5 size-4 shrink-0 text-ludo-gold" />
               <p>
-                <b>BIG_MATCH</b>, <b>SUPER_BIG_MATCH</b>,
-                dan <b>IFTAR_2027</b> menggunakan sistem layout meja penuh (VVIP, VIP, Reguler, Barstool).
+                <b>BIG_MATCH</b>, <b>SUPER_BIG_MATCH</b>, <b>IFTAR_2027</b>,
+                dan <b>MUSIC</b> menggunakan booking normal yang dapat dikonfigurasi dengan package dan meja.
               </p>
             </li>
             <li className="flex items-start gap-3">

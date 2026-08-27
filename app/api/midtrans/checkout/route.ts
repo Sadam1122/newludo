@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 
     // Validate a la carte add-on items (optional)
     const requestedAlaCarte: { packageId: string; quantity: number; note?: string }[] = Array.isArray(alaCarteItems)
-      ? alaCarteItems.filter((i: any) => i?.packageId && Number(i.quantity) > 0)
+      ? alaCarteItems.filter((i: { packageId?: string; quantity?: number }) => i?.packageId && Number(i.quantity) > 0)
       : [];
 
     let alaCarteLines: { eventPackage: { id: string; name: string; price: number }; quantity: number; note: string | null }[] = [];
@@ -176,7 +176,7 @@ export async function POST(req: Request) {
     const expiredAt = new Date(Date.now() + 15 * 60 * 1000);
     const orderId = `LUDO-${Date.now()}-${randomUUID().slice(0, 4)}`;
 
-    const reservation = await prisma.reservation.create({
+    await prisma.reservation.create({
       data: {
         id: orderId,
         bookingEventId: eventId,
@@ -301,10 +301,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ snapToken, orderId, expiredAt });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Checkout Error:", error);
     return NextResponse.json(
-      { message: error.message || "Failed to process checkout" },
+      { message: error instanceof Error ? error.message : "Failed to process checkout" },
       { status: 500 }
     );
   }

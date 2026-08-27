@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  MATCH_CTA_ICON_KEYS,
+  normalizeExternalHttpUrl,
+} from "@/lib/bookingCta";
+import { normalizeWhatsappDestination } from "@/lib/whatsapp";
+
 const optionalText = z
   .string()
   .trim()
@@ -20,6 +26,8 @@ export const matchStatusSchema = z.enum([
 ]);
 
 export const matchDisplayModeSchema = z.enum(["TEAM_MATCH", "GENERAL_EVENT"]);
+export const matchCtaTypeSchema = z.enum(["WHATSAPP", "VENDOR"]);
+export const matchCtaIconSchema = z.enum(MATCH_CTA_ICON_KEYS);
 
 // Subset of EventTemplate that makes sense for a match: DELIVERY_ORDER is
 // never selectable here (that is its own dedicated singleton flow).
@@ -50,6 +58,15 @@ export const matchSchema = z
     scheduledAt: z.date().nullable(),
     status: matchStatusSchema,
     buttonLabel: requiredText("Button label"),
+    customCtaEnabled: z.boolean(),
+    customCtaType: matchCtaTypeSchema.nullable(),
+    customCtaText: optionalText,
+    customCtaColor: optionalText.refine(
+      (value) => value === null || /^#[0-9A-Fa-f]{6}$/.test(value),
+      "CTA color must be a 6-digit hexadecimal color",
+    ),
+    customCtaIcon: matchCtaIconSchema.nullable(),
+    customCtaUrl: optionalText,
     subTextTitle: optionalText,
     whatsappMessage: optionalText,
     showSoldOutStamp: z.boolean(),
@@ -57,21 +74,61 @@ export const matchSchema = z
     sortOrder: z.number().int(),
   })
   .superRefine((value, ctx) => {
-    if (value.displayMode !== "TEAM_MATCH") return;
+    if (value.displayMode === "TEAM_MATCH") {
+      if (!value.homeTeamName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["homeTeamName"],
+          message: "Home team is required for Team Match mode",
+        });
+      }
 
-    if (!value.homeTeamName) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["homeTeamName"],
-        message: "Home team is required for Team Match mode",
-      });
+      if (!value.awayTeamName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["awayTeamName"],
+          message: "Away team is required for Team Match mode",
+        });
+      }
     }
 
-    if (!value.awayTeamName) {
+    if (!value.customCtaEnabled) return;
+
+    if (!value.customCtaType) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["awayTeamName"],
-        message: "Away team is required for Team Match mode",
+        path: ["customCtaType"],
+        message: "Choose WhatsApp or Vendor for the custom CTA",
+      });
+      return;
+    }
+
+    if (!value.customCtaUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["customCtaUrl"],
+        message:
+          value.customCtaType === "WHATSAPP"
+            ? "Please enter a valid WhatsApp number or link."
+            : "Please enter a valid http/https booking URL.",
+      });
+    } else if (
+      value.customCtaType === "WHATSAPP" &&
+      !normalizeWhatsappDestination(value.customCtaUrl)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["customCtaUrl"],
+        message: "Please enter a valid WhatsApp number or link.",
+      });
+    } else if (
+      value.customCtaType === "VENDOR" &&
+      !normalizeExternalHttpUrl(value.customCtaUrl)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["customCtaUrl"],
+        message: "Please enter a valid http/https booking URL.",
       });
     }
   });
@@ -89,8 +146,6 @@ export const heroSchema = z.object({
   isActive: z.boolean(),
   sortOrder: z.number().int(),
 });
-
-
 
 export const locationSchema = z.object({
   businessName: requiredText("Business name"),
@@ -159,6 +214,7 @@ export const eventTemplateSchema = z.enum([
   "BIG_MATCH",
   "SUPER_BIG_MATCH",
   "IFTAR_2027",
+  "MUSIC",
   "DELIVERY_ORDER",
 ]);
 

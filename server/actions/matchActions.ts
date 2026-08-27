@@ -16,6 +16,12 @@ import { idSchema, matchSchema } from "@/lib/validations";
 import { saveUploadedImage } from "@/lib/upload";
 import { buildLudoTableLayout } from "@/lib/tableLayout";
 import { isWhatsappOnlyTemplate } from "@/lib/eventGating";
+import {
+  normalizeExternalHttpUrl,
+  normalizeHexColor,
+  normalizeMatchCtaIcon,
+} from "@/lib/bookingCta";
+import { normalizeWhatsappDestination } from "@/lib/whatsapp";
 import type { MatchCard } from "@prisma/client";
 import {
   getActionErrorMessage,
@@ -26,7 +32,7 @@ const adminPath = "/admin/matches";
 
 function buildBookingEventTitle(match: MatchCard) {
   return match.displayMode === "GENERAL_EVENT"
-    ? match.title ?? match.leagueName
+    ? (match.title ?? match.leagueName)
     : `${match.homeTeamName ?? "Home"} vs ${match.awayTeamName ?? "Away"}`;
 }
 
@@ -136,6 +142,12 @@ async function buildMatchData(formData: FormData) {
     scheduledAt: getFormDate(formData, "scheduledAt"),
     status: getFormString(formData, "status"),
     buttonLabel: getFormString(formData, "buttonLabel"),
+    customCtaEnabled: getFormBoolean(formData, "customCtaEnabled"),
+    customCtaType: getFormOptionalString(formData, "customCtaType"),
+    customCtaText: getFormOptionalString(formData, "customCtaText"),
+    customCtaColor: getFormOptionalString(formData, "customCtaColor"),
+    customCtaIcon: getFormOptionalString(formData, "customCtaIcon"),
+    customCtaUrl: getFormOptionalString(formData, "customCtaUrl"),
     subTextTitle: getFormOptionalString(formData, "subTextTitle"),
     whatsappMessage: getFormOptionalString(formData, "whatsappMessage"),
     showSoldOutStamp: getFormBoolean(formData, "showSoldOutStamp"),
@@ -161,6 +173,16 @@ async function buildMatchData(formData: FormData) {
     const media = await saveUploadedImage(eventImageFile);
     parsed.eventImage = media.url;
   }
+
+  if (parsed.customCtaUrl && parsed.customCtaType === "WHATSAPP") {
+    parsed.customCtaUrl = normalizeWhatsappDestination(parsed.customCtaUrl);
+  } else if (parsed.customCtaUrl && parsed.customCtaType === "VENDOR") {
+    parsed.customCtaUrl = normalizeExternalHttpUrl(parsed.customCtaUrl);
+  }
+  parsed.customCtaColor = normalizeHexColor(parsed.customCtaColor);
+  parsed.customCtaIcon = parsed.customCtaIcon
+    ? normalizeMatchCtaIcon(parsed.customCtaIcon)
+    : null;
 
   return parsed;
 }
@@ -228,7 +250,9 @@ export async function updateMatchBookingDetails(formData: FormData) {
   const matchPath = `${adminPath}/${matchId}`;
 
   try {
-    const bookingEventId = idSchema.parse(getFormString(formData, "bookingEventId"));
+    const bookingEventId = idSchema.parse(
+      getFormString(formData, "bookingEventId"),
+    );
 
     await prisma.bookingEvent.update({
       where: { id: bookingEventId },

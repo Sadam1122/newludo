@@ -43,6 +43,12 @@ export type PublicMatch = {
   totalTables: number | null;
   hasPackages: boolean;
   isWhatsappOnly: boolean;
+  customCtaEnabled: boolean;
+  customCtaType: "WHATSAPP" | "VENDOR" | null;
+  customCtaText: string | null;
+  customCtaColor: string | null;
+  customCtaIcon: string | null;
+  customCtaUrl: string | null;
 };
 
 export type PublicHero = {
@@ -61,6 +67,14 @@ export type PublicHero = {
 export type PublicEvent = {
   id: string;
   category: "LIVE_EVENT" | "BOOKING_EVENT";
+  eventType:
+    | "REGULER_MATCH"
+    | "NOBAR_COMMUNITY"
+    | "BIG_MATCH"
+    | "SUPER_BIG_MATCH"
+    | "IFTAR_2027"
+    | "MUSIC"
+    | "DELIVERY_ORDER";
   isWhatsappOnly: boolean;
   title: string;
   artistName: string;

@@ -9,6 +9,10 @@ import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 import { GalleryForm } from "@/components/admin/GalleryForm";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  getMaxGalleryUploadRequestMb,
+  getMaxVideoUploadMb,
+} from "@/lib/upload";
 import { cn } from "@/lib/utils";
 import {
   deleteGalleryItem,
@@ -63,7 +67,11 @@ export default async function GalleryPage({ searchParams }: PageProps) {
       </div>
 
       <AdminCard title="Add Gallery Video">
-        <GalleryForm nextSortOrder={nextSortOrder} />
+        <GalleryForm
+          nextSortOrder={nextSortOrder}
+          maxVideoUploadMb={getMaxVideoUploadMb()}
+          maxUploadRequestMb={getMaxGalleryUploadRequestMb()}
+        />
       </AdminCard>
 
       {uploadedVideos.length > 0 ? (
@@ -152,7 +160,11 @@ export default async function GalleryPage({ searchParams }: PageProps) {
                       Edit gallery video
                     </summary>
                     <div className="mt-4 rounded-xl border border-white/10 bg-ludo-black p-4">
-                      <GalleryForm item={item} />
+                      <GalleryForm
+                        item={item}
+                        maxVideoUploadMb={getMaxVideoUploadMb()}
+                        maxUploadRequestMb={getMaxGalleryUploadRequestMb()}
+                      />
                     </div>
                   </details>
                 </td>
@@ -208,7 +220,7 @@ export default async function GalleryPage({ searchParams }: PageProps) {
             ))}
           </tbody>
         </AdminTable>
-        
+
         <Pagination totalPages={totalPages} />
       </section>
     </div>
