@@ -720,6 +720,10 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                 {matchingPackages.map((pkg) => {
                   const isSelected = selectedPackage?.id === pkg.id;
                   const isSoldOut = pkg.isSoldOut;
+                  const packageImage =
+                    pkg.posterImage ??
+                    event.posterImage ??
+                    event.backgroundImage;
                   return (
                     <button
                       type="button"
@@ -739,14 +743,14 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                             : "border-white/10 bg-black/20 hover:border-white/30",
                       )}
                     >
-                      {pkg.posterImage && (
-                        <div className="relative w-full">
+                      {packageImage && (
+                        <div className="relative flex w-full items-center justify-center overflow-hidden bg-black/30">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={pkg.posterImage}
+                            src={packageImage}
                             alt={pkg.name}
                             className={cn(
-                              "h-36 w-full object-cover sm:h-44",
+                              "h-auto w-full object-contain",
                               isSoldOut && "grayscale",
                             )}
                           />
@@ -764,7 +768,7 @@ export function BookingForm({ event, alaCarteMenu = [] }: Props) {
                           <div>
                             <h3 className="font-bold text-white">
                               {pkg.name}
-                              {isSoldOut && !pkg.posterImage && (
+                              {isSoldOut && !packageImage && (
                                 <span className="ml-2 rounded-full border border-ludo-red/50 bg-ludo-red/20 px-2 py-0.5 text-[10px] font-black uppercase text-red-100">
                                   Sold Out
                                 </span>

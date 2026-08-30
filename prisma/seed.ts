@@ -235,7 +235,7 @@ async function seedSettingsAndCms() {
     instagramUrl: "https://www.instagram.com/ludosportskitchen/",
     matchSectionTitle: "UPCOMING SPORTS SCHEDULE",
     menuUrl:
-      "https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r",
+      "https://drive.google.com/drive/folders/1gqPCE7nr4ynRt6qpbNeIcX7FBfsMIMIF",
     siteName: "LUDO Sports Kitchen & Coffee",
     siteTagline: "EAT \u00B7 WATCH \u00B7 CONNECT",
     tiktokHandle: "@ludosportskitchen",

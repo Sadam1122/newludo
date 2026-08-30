@@ -1,13 +1,27 @@
 import type { SiteSetting, EventMiceSetting } from "@prisma/client";
 import type { Metadata } from "next";
-import { CheckCircle2, ChevronRight, MessageSquare, MonitorPlay, Users, Calendar, Music, CarFront, UsersRound, HelpCircle, Briefcase, Ticket, Megaphone, PartyPopper, HeartHandshake } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  MessageSquare,
+  MonitorPlay,
+  Users,
+  Calendar,
+  Music,
+  CarFront,
+  UsersRound,
+  HelpCircle,
+  Briefcase,
+  Ticket,
+  Megaphone,
+  PartyPopper,
+  HeartHandshake,
+} from "lucide-react";
 
 import { EventMiceVenueLayout } from "@/components/public/EventMiceVenueLayout";
 import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
-import type {
-  PublicSettings,
-} from "@/components/public/types";
+import type { PublicSettings } from "@/components/public/types";
 import { WhatsAppButton } from "@/components/public/WhatsAppButton";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/seo";
@@ -38,7 +52,7 @@ const DEFAULT_SETTINGS: PublicSettings = {
   tiktokHandle: "@ludosportskitchen",
   tiktokUrl: "https://www.tiktok.com/@ludosportskitchen",
   menuUrl:
-    "https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r",
+    "https://drive.google.com/drive/folders/1gqPCE7nr4ynRt6qpbNeIcX7FBfsMIMIF",
   matchSectionTitle: "UPCOMING SPORTS SCHEDULE",
   headerBookingLabel: "Book",
   headerBookingUrl: null,
@@ -60,10 +74,18 @@ export default async function EventMicePage() {
   const publicSettings = toPublicSettings(settings);
 
   const heroHeadline = miceSetting?.heroHeadline ?? "SPACE FOR EVERY OCCASION";
-  const heroDesc = miceSetting?.heroDescription ?? "Host gathering, meeting, watch party, community event, hingga private celebration dengan suasana sportsbar premium di Bandung.\n\nIndoor & semi outdoor venue dengan giant screen, live entertainment, dan pilihan paket F&B yang dapat disesuaikan dengan kebutuhan acara Anda.";
-  const s2Headline = miceSetting?.section2Headline ?? "BUILT FOR GATHERINGS, DESIGNED FOR COLLABORATIONS.";
-  const s2Desc = miceSetting?.section2Description ?? "Dari meeting hingga brand activation, dari komunitas hingga perayaan spesial—setiap detail acara Anda dapat kami sesuaikan.";
-  const quote = miceSetting?.quoteText ?? "YOUR VISION, OUR SPACE. TOGETHER, WE CREATE UNFORGETTABLE EXPERIENCES.";
+  const heroDesc =
+    miceSetting?.heroDescription ??
+    "Host gathering, meeting, watch party, community event, hingga private celebration dengan suasana sportsbar premium di Bandung.\n\nIndoor & semi outdoor venue dengan giant screen, live entertainment, dan pilihan paket F&B yang dapat disesuaikan dengan kebutuhan acara Anda.";
+  const s2Headline =
+    miceSetting?.section2Headline ??
+    "BUILT FOR GATHERINGS, DESIGNED FOR COLLABORATIONS.";
+  const s2Desc =
+    miceSetting?.section2Description ??
+    "Dari meeting hingga brand activation, dari komunitas hingga perayaan spesial—setiap detail acara Anda dapat kami sesuaikan.";
+  const quote =
+    miceSetting?.quoteText ??
+    "YOUR VISION, OUR SPACE. TOGETHER, WE CREATE UNFORGETTABLE EXPERIENCES.";
 
   return (
     <main className="min-h-screen bg-[#050505] text-[#F8EDE7]">
@@ -84,23 +106,25 @@ export default async function EventMicePage() {
       {/* Slide 1 - Hero */}
       <section className="relative isolate overflow-hidden bg-[linear-gradient(135deg,#050505_0%,#5A0505_58%,#000000_100%)] pt-24 pb-12 sm:pt-32 sm:pb-20">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(247,198,0,0.16),transparent_28%),radial-gradient(circle_at_22%_62%,rgba(239,31,40,0.24),transparent_34%)]" />
-        
+
         <div className="ludo-section-shell relative z-10">
           <p className="text-sm font-black uppercase tracking-[0.2em] text-[#EF1F28] mb-4">
             EVENT / MICE
           </p>
-          
+
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             <div>
               <h1 className="font-display text-[clamp(3.5rem,10vw,8rem)] uppercase leading-[0.85] text-white whitespace-pre-line">
                 {heroHeadline.split("/").map((part, i, arr) => (
                   <span key={i}>
                     {part}
-                    {i < arr.length - 1 && <span className="text-[#EF1F28]">/</span>}
+                    {i < arr.length - 1 && (
+                      <span className="text-[#EF1F28]">/</span>
+                    )}
                   </span>
                 ))}
               </h1>
-              
+
               <div className="mt-8 space-y-4 max-w-xl text-sm font-medium leading-relaxed text-[#D7C8C1] sm:text-base whitespace-pre-line">
                 {heroDesc}
               </div>
@@ -127,21 +151,42 @@ export default async function EventMicePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="rounded-[24px] border border-[#EF1F28]/30 bg-black/40 p-5 text-center backdrop-blur shadow-[0_8px_30px_rgba(239,31,40,0.15)]">
                   <Users className="w-8 h-8 mx-auto text-[#F7C600] mb-3" />
-                  <p className="text-3xl font-display text-[#F7C600]">100-300+</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mt-1">CAPACITY</p>
-                  <p className="text-xs text-white/50 mt-3 font-medium">Cocok untuk acara skala kecil hingga besar.</p>
+                  <p className="text-3xl font-display text-[#F7C600]">
+                    100-300+
+                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mt-1">
+                    CAPACITY
+                  </p>
+                  <p className="text-xs text-white/50 mt-3 font-medium">
+                    Cocok untuk acara skala kecil hingga besar.
+                  </p>
                 </div>
                 <div className="rounded-[24px] border border-white/10 bg-black/40 p-5 text-center backdrop-blur">
                   <MonitorPlay className="w-8 h-8 mx-auto text-white mb-3" />
-                  <p className="text-xl font-black uppercase text-white">INDOOR &<br/>SEMI OUTDOOR</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#F7C600] mt-1">FLEXIBLE VENUE</p>
-                  <p className="text-xs text-white/50 mt-3 font-medium">Area versatile yang dapat diatur sesuai kebutuhan acara.</p>
+                  <p className="text-xl font-black uppercase text-white">
+                    INDOOR &<br />
+                    SEMI OUTDOOR
+                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#F7C600] mt-1">
+                    FLEXIBLE VENUE
+                  </p>
+                  <p className="text-xs text-white/50 mt-3 font-medium">
+                    Area versatile yang dapat diatur sesuai kebutuhan acara.
+                  </p>
                 </div>
                 <div className="rounded-[24px] border border-white/10 bg-black/40 p-5 text-center backdrop-blur">
                   <CheckCircle2 className="w-8 h-8 mx-auto text-white mb-3" />
-                  <p className="text-xl font-black uppercase text-white">CUSTOM<br/>PACKAGE</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#F7C600] mt-1">TAILORED EXPERIENCE</p>
-                  <p className="text-xs text-white/50 mt-3 font-medium">Paket F&B dan konsep acara yang dapat disesuaikan.</p>
+                  <p className="text-xl font-black uppercase text-white">
+                    CUSTOM
+                    <br />
+                    PACKAGE
+                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#F7C600] mt-1">
+                    TAILORED EXPERIENCE
+                  </p>
+                  <p className="text-xs text-white/50 mt-3 font-medium">
+                    Paket F&B dan konsep acara yang dapat disesuaikan.
+                  </p>
                 </div>
               </div>
 
@@ -149,27 +194,39 @@ export default async function EventMicePage() {
                 <div className="grid grid-cols-2 gap-y-4 gap-x-2">
                   <div className="flex items-center gap-3">
                     <Briefcase className="w-5 h-5 text-[#EF1F28]" />
-                    <span className="text-sm font-bold uppercase tracking-wide">CORPORATE GATHERING</span>
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      CORPORATE GATHERING
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <PartyPopper className="w-5 h-5 text-[#EF1F28]" />
-                    <span className="text-sm font-bold uppercase tracking-wide">BIRTHDAY CELEBRATION</span>
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      BIRTHDAY CELEBRATION
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <UsersRound className="w-5 h-5 text-[#EF1F28]" />
-                    <span className="text-sm font-bold uppercase tracking-wide">COMMUNITY EVENT</span>
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      COMMUNITY EVENT
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Megaphone className="w-5 h-5 text-[#EF1F28]" />
-                    <span className="text-sm font-bold uppercase tracking-wide">PRODUCT LAUNCH</span>
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      PRODUCT LAUNCH
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MonitorPlay className="w-5 h-5 text-[#EF1F28]" />
-                    <span className="text-sm font-bold uppercase tracking-wide">WATCH PARTY</span>
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      WATCH PARTY
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Megaphone className="w-5 h-5 text-[#EF1F28]" />
-                    <span className="text-sm font-bold uppercase tracking-wide">BRAND ACTIVATION</span>
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      BRAND ACTIVATION
+                    </span>
                   </div>
                 </div>
               </div>
@@ -180,15 +237,29 @@ export default async function EventMicePage() {
         {/* Bottom Bar Features */}
         <div className="absolute bottom-0 w-full border-t border-white/10 bg-black/80 backdrop-blur-md hidden sm:block">
           <div className="ludo-section-shell py-4 flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-white/80">
-            <div className="flex items-center gap-2"><MonitorPlay className="w-4 h-4 text-[#EF1F28]" /> GIANT LED SCREEN</div>
+            <div className="flex items-center gap-2">
+              <MonitorPlay className="w-4 h-4 text-[#EF1F28]" /> GIANT LED
+              SCREEN
+            </div>
             <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-2"><Music className="w-4 h-4 text-[#EF1F28]" /> LIVE ENTERTAINMENT</div>
+            <div className="flex items-center gap-2">
+              <Music className="w-4 h-4 text-[#EF1F28]" /> LIVE ENTERTAINMENT
+            </div>
             <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#EF1F28]" /> FOOD & BEVERAGE PACKAGES</div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#EF1F28]" /> FOOD &
+              BEVERAGE PACKAGES
+            </div>
             <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-2"><CarFront className="w-4 h-4 text-[#EF1F28]" /> EASY PARKING ACCESS</div>
+            <div className="flex items-center gap-2">
+              <CarFront className="w-4 h-4 text-[#EF1F28]" /> EASY PARKING
+              ACCESS
+            </div>
             <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#EF1F28]" /> DEDICATED EVENT TEAM</div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#EF1F28]" /> DEDICATED
+              EVENT TEAM
+            </div>
           </div>
         </div>
       </section>
@@ -197,24 +268,28 @@ export default async function EventMicePage() {
       <section className="relative isolate overflow-hidden bg-[#0A0A0A] py-16 sm:py-24">
         <div className="ludo-section-shell relative z-10">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            
             <div>
               <div className="flex items-center gap-4 mb-6">
-                <p className="text-sm font-black uppercase tracking-widest text-[#EF1F28]">EVENT / MICE</p>
+                <p className="text-sm font-black uppercase tracking-widest text-[#EF1F28]">
+                  EVENT / MICE
+                </p>
                 <div className="h-px flex-1 bg-[linear-gradient(90deg,#EF1F28,transparent)] opacity-50" />
-                <p className="text-sm font-black uppercase tracking-widest text-[#F7C600]">SUITABLE FOR</p>
+                <p className="text-sm font-black uppercase tracking-widest text-[#F7C600]">
+                  SUITABLE FOR
+                </p>
               </div>
-              
+
               <h2 className="font-display text-[clamp(3rem,8vw,5.5rem)] uppercase leading-[0.85] text-white">
                 {s2Headline.split(",").map((part, i, arr) => (
                   <span key={i}>
-                    {part}{i < arr.length - 1 ? "," : ""}
+                    {part}
+                    {i < arr.length - 1 ? "," : ""}
                     {i === 0 && <br />}
                     {i === 1 && <span className="text-[#EF1F28]">.</span>}
                   </span>
                 ))}
               </h2>
-              
+
               <p className="mt-8 text-base font-medium leading-relaxed text-[#D7C8C1]">
                 {s2Desc}
               </p>
@@ -222,19 +297,35 @@ export default async function EventMicePage() {
               <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 border-y border-white/10 py-8">
                 <div className="text-center">
                   <Users className="w-6 h-6 mx-auto mb-2 text-white/80" />
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white">FLEXIBLE<br/>LAYOUT</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-white">
+                    FLEXIBLE
+                    <br />
+                    LAYOUT
+                  </p>
                 </div>
                 <div className="text-center">
                   <CheckCircle2 className="w-6 h-6 mx-auto mb-2 text-white/80" />
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white">F&B<br/>PACKAGES</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-white">
+                    F&B
+                    <br />
+                    PACKAGES
+                  </p>
                 </div>
                 <div className="text-center">
                   <Megaphone className="w-6 h-6 mx-auto mb-2 text-white/80" />
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white">AUDIO VISUAL<br/>SUPPORT</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-white">
+                    AUDIO VISUAL
+                    <br />
+                    SUPPORT
+                  </p>
                 </div>
                 <div className="text-center">
                   <CheckCircle2 className="w-6 h-6 mx-auto mb-2 text-white/80" />
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white">DEDICATED<br/>EVENT TEAM</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-white">
+                    DEDICATED
+                    <br />
+                    EVENT TEAM
+                  </p>
                 </div>
               </div>
 
@@ -258,15 +349,43 @@ export default async function EventMicePage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {/* Event Cards */}
-              <EventCard title="CORPORATE MEETING" desc="Rapat, workshop, seminar, hingga training dengan fasilitas lengkap." icon={<Briefcase />} />
-              <EventCard title="BRAND ACTIVATION" desc="Aktivasi brand yang berkesan dengan dukungan konsep teknis terbaik." icon={<Megaphone />} />
-              <EventCard title="WATCH PARTY" desc="Nonton bareng pertandingan favorit dengan layar besar dan sound premium." icon={<MonitorPlay />} />
-              <EventCard title="BIRTHDAY CELEBRATION" desc="Rayakan momen spesial bersama keluarga dan teman-teman." icon={<PartyPopper />} />
-              <EventCard title="PRODUCT LAUNCHING" desc="Perkenalkan produk Anda dengan cara yang lebih impactful." icon={<Megaphone />} />
-              <EventCard title="COMMUNITY GATHERING" desc="Bangun kebersamaan komunitas dalam suasana yang nyaman." icon={<UsersRound />} />
-              <EventCard title="INTIMATE WEDDING" desc="Pernikahan intim yang elegan dan hangat dengan sentuhan personal." icon={<HeartHandshake />} className="col-span-2 sm:col-span-3 lg:col-span-1" />
+              <EventCard
+                title="CORPORATE MEETING"
+                desc="Rapat, workshop, seminar, hingga training dengan fasilitas lengkap."
+                icon={<Briefcase />}
+              />
+              <EventCard
+                title="BRAND ACTIVATION"
+                desc="Aktivasi brand yang berkesan dengan dukungan konsep teknis terbaik."
+                icon={<Megaphone />}
+              />
+              <EventCard
+                title="WATCH PARTY"
+                desc="Nonton bareng pertandingan favorit dengan layar besar dan sound premium."
+                icon={<MonitorPlay />}
+              />
+              <EventCard
+                title="BIRTHDAY CELEBRATION"
+                desc="Rayakan momen spesial bersama keluarga dan teman-teman."
+                icon={<PartyPopper />}
+              />
+              <EventCard
+                title="PRODUCT LAUNCHING"
+                desc="Perkenalkan produk Anda dengan cara yang lebih impactful."
+                icon={<Megaphone />}
+              />
+              <EventCard
+                title="COMMUNITY GATHERING"
+                desc="Bangun kebersamaan komunitas dalam suasana yang nyaman."
+                icon={<UsersRound />}
+              />
+              <EventCard
+                title="INTIMATE WEDDING"
+                desc="Pernikahan intim yang elegan dan hangat dengan sentuhan personal."
+                icon={<HeartHandshake />}
+                className="col-span-2 sm:col-span-3 lg:col-span-1"
+              />
             </div>
-
           </div>
 
           <div className="mt-20 flex items-center justify-center gap-4 text-center">
@@ -275,7 +394,9 @@ export default async function EventMicePage() {
               {quote.split("TOGETHER").map((part, i, arr) => (
                 <span key={i}>
                   {part}
-                  {i < arr.length - 1 && <span className="text-[#EF1F28]">TOGETHER</span>}
+                  {i < arr.length - 1 && (
+                    <span className="text-[#EF1F28]">TOGETHER</span>
+                  )}
                 </span>
               ))}
             </p>
@@ -294,9 +415,21 @@ export default async function EventMicePage() {
   );
 }
 
-function EventCard({ title, desc, icon, className = "" }: { title: string, desc: string, icon: React.ReactNode, className?: string }) {
+function EventCard({
+  title,
+  desc,
+  icon,
+  className = "",
+}: {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-black p-4 transition hover:border-[#EF1F28]/50 ${className}`}>
+    <div
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-black p-4 transition hover:border-[#EF1F28]/50 ${className}`}
+    >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#EF1F28]/10 opacity-0 transition group-hover:opacity-100" />
       <div className="relative z-10 flex flex-col h-full items-center text-center">
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-[#EF1F28]">
@@ -310,9 +443,8 @@ function EventCard({ title, desc, icon, className = "" }: { title: string, desc:
         </p>
       </div>
     </div>
-  )
+  );
 }
-
 
 async function getEventMiceContent(): Promise<EventMiceContent> {
   const [settings, miceSetting] = await Promise.all([

@@ -34,7 +34,7 @@ model SiteSetting {
   instagramUrl           String   @default("https://www.instagram.com/ludosportskitchen/")
   tiktokHandle           String   @default("@ludosportskitchen")
   tiktokUrl              String   @default("https://www.tiktok.com/@ludosportskitchen")
-  menuUrl                String   @default("https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r")
+  menuUrl                String   @default("https://drive.google.com/drive/folders/1gqPCE7nr4ynRt6qpbNeIcX7FBfsMIMIF")
   footerCopyright        String   @default("© 2026 LUDO SPORTS KITCHEN & COFFEE. ALL RIGHTS RESERVED.")
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt

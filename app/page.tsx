@@ -102,7 +102,7 @@ const DEFAULT_SETTINGS: PublicSettings = {
   tiktokHandle: "@ludosportskitchen",
   tiktokUrl: "https://www.tiktok.com/@ludosportskitchen",
   menuUrl:
-    "https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r",
+    "https://drive.google.com/drive/folders/1gqPCE7nr4ynRt6qpbNeIcX7FBfsMIMIF",
   matchSectionTitle: "THIS WEEK MATCH",
   headerBookingLabel: "WhatsApp",
   headerBookingUrl: null,

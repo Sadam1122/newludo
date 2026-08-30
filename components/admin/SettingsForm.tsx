@@ -87,7 +87,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           name="menuUrl"
           defaultValue={
             settings?.menuUrl ??
-            "https://drive.google.com/drive/folders/1qvRivb-6awFzYvzaCEP9H0NbM3EIcU9r"
+            "https://drive.google.com/drive/folders/1gqPCE7nr4ynRt6qpbNeIcX7FBfsMIMIF"
           }
         />
       </div>
